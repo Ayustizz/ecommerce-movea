@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movea | Ofertas</title>
+   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+   <link rel="stylesheet" href="../styles/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <header class="site-header">
+        <nav class="navbar navbar-expand-lg navbar-dark site-navbar">
+            <div class="container-fluid site-navbar-inner">
+                <a class="navbar-brand" href="../index.html">Movea</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#siteNavigation" aria-controls="siteNavigation" aria-expanded="false" aria-label="Abrir o cerrar el menú">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="siteNavigation">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item"><a class="nav-link" href="../index.html">Inicio</a></li>
+                        <li class="nav-item"><a class="nav-link" href="./nosotros.html">Nosotros</a></li>
+                        <li class="nav-item"><a class="nav-link" href="./contacto.html">Contacto</a></li>
+                        <li class="nav-item"><a class="nav-link" href="./productos.html">Productos</a></li>
+                        <li class="nav-item"><a class="nav-link active" aria-current="page" href="./ofertas.html">Ofertas</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="product-container product-container--offers" data-product-list aria-labelledby="ofertas-titulo">
+            <h1 id="ofertas-titulo">Ofertas</h1>
+            <div class="product-filters" aria-label="Filtros de ofertas">
+                <label>
+                    <span>Buscar oferta</span>
+                    <input type="search" data-product-search placeholder="Ej.: top..." autocomplete="off">
+                </label>
+                <label>
+                    <span>Categoría</span>
+                    <select data-product-category>
+                        <option value="">Todas las categorías</option>
+                        <option value="buzos">Buzos</option>
+                        <option value="joggers">Joggers</option>
+                        <option value="tops">Tops</option>
+                        <option value="shorts">Shorts</option>
+                    </select>
+                </label>
+                <p class="product-filter__count" data-product-count aria-live="polite"></p>
+            </div>
+
+            <article class="product_card" data-category="tops">
+                <span class="offer-label">Oferta</span>
+                <figure>
+                    <img src="../img/Img_portadas/top-marron.png" alt="Top deportivo marrón en oferta">
+                </figure>
+                <h2>Top deportivo marrón</h2>
+                <span>$2.000</span>
+                <p>Top deportivo femenino, cómodo y ligero, ideal para entrenamientos y actividades de alto movimiento.</p>
+            </article>
+            <p class="product-filter__empty" data-product-empty hidden>No encontramos ofertas con esos filtros. Probá con otra búsqueda.</p>
+        </section>
+
+    </main>
+
+    <footer>
+
+    <section class="redes_footer">
+        <h2>Redes sociales</h2>
+        <div class="link_redes">
+
+            <a href="https://www.facebook.com/movea_fit/" target="_blank" rel="noopener noreferrer" aria-label="Movea en Facebook">
+                <i class="fa-brands fa-facebook" aria-hidden="true"></i>
+            </a>
+
+            <a href="https://www.instagram.com/movea_fit/" target="_blank" rel="noopener noreferrer" aria-label="Movea en Instagram">
+                <i class="fa-brands fa-instagram" aria-hidden="true"></i>
+            </a>
+
+        </div>
+    </section>
+
+    <section class="tienda_links_footer">
+        <h2>Tienda</h2>
+        <ul class="tienda_footer">
+            <li>
+                <a href="../index.html">
+                    Inicio
+                </a>
+            </li>
+
+            <li>
+                <a href="./nosotros.html">
+                    Nosotros
+                </a>
+            </li>
+
+            <li>
+                <a href="./productos.html">
+                    Productos
+                </a>
+            </li>
+
+            <li>
+                <a href="./ofertas.html">
+                    Ofertas
+                </a>
+            </li>
+
+        </ul>
+
+    </section>
+
+
+    <section class="ayuda_link_footer">
+        <h2>Ayuda</h2>
+        <ul class="ayuda_footer">
+            <li>
+                <a href="../index.html">
+                    Inicio
+                </a>
+            </li>
+            <li>
+                <a href="./cambios">
+                    Cambios
+                </a>
+            </li>
+            <li>
+                <a href="./contacto.html">
+                    Contacto
+                </a>
+            </li>
+        </ul>
+    </section>
+
+    <section class="ubicacion_footer">
+        <h2>Encontranos</h2>
+        <iframe title="Ubicación de Movea en Tortuguitas, Buenos Aires" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d43648.563503690886!2d-58.78806822297592!3d-34.47600898018888!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95bc988e12661a07%3A0xa51def392da2533!2sB1667%20Tortuguitas%2C%20Provincia%20de%20Buenos%20Aires!5e1!3m2!1ses-419!2sar!4v1790769162042!5m2!1ses-419!2sar" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+    </section>
+
+    <div class="linea"></div>
+
+    <p>
+        Todos los derechos reservados
+    </p>
+
+</footer>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../scripts/product-filters.js"></script>
+</body>
+</html>
