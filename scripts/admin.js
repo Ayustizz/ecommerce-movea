@@ -46,6 +46,21 @@ const EXPENSE_CATEGORY_NAMES = {
     otros: "Otros"
 };
 
+const DELIVERY_NAMES = {
+    encuentro: "Punto de encuentro",
+    uber: "Envío por Uber"
+};
+
+const MP_STATUS_NAMES = {
+    iniciado: "Esperando pago en Mercado Pago.",
+    approved: "Pago aprobado por Mercado Pago.",
+    rejected: "Mercado Pago rechazó el pago.",
+    cancelled: "El pago se canceló en Mercado Pago.",
+    refunded: "El pago se devolvió en Mercado Pago.",
+    charged_back: "El cliente desconoció el pago en su tarjeta.",
+    monto_incorrecto: "Atención: el importe pagado no coincide con el pedido."
+};
+
 const CATEGORY_NAMES = {
     buzos: "Buzos",
     joggers: "Joggers",
@@ -73,6 +88,8 @@ const loginSubmit = document.getElementById("login-submit");
 const tabProducts = document.getElementById("tab-products");
 const tabOrders = document.getElementById("tab-orders");
 const tabAccounts = document.getElementById("tab-accounts");
+const tabBanners = document.getElementById("tab-banners");
+const viewBanners = document.getElementById("view-banners");
 const viewProducts = document.getElementById("view-products");
 const viewOrders = document.getElementById("view-orders");
 const viewAccounts = document.getElementById("view-accounts");
@@ -86,6 +103,10 @@ const productDescription = document.getElementById("product-description");
 const productCategory = document.getElementById("product-category");
 const productPrice = document.getElementById("product-price");
 const productCost = document.getElementById("product-cost");
+const productComparePrice = document.getElementById("product-compare-price");
+const productTrackStock = document.getElementById("product-track-stock");
+const productStockGrid = document.getElementById("product-stock-grid");
+const productOffer = document.getElementById("product-offer");
 const productColors = document.getElementById("product-colors");
 const productSizes = document.querySelectorAll('input[name="productSize"]');
 const productImage = document.getElementById("product-image");
@@ -103,6 +124,16 @@ const ordersCount = document.getElementById("orders-count");
 const statMonth = document.getElementById("stat-month");
 const statPending = document.getElementById("stat-pending");
 const statCount = document.getElementById("stat-count");
+
+const ordersExport = document.getElementById("orders-export");
+const expensesExport = document.getElementById("expenses-export");
+
+const bannerForm = document.getElementById("banner-form");
+const bannerImage = document.getElementById("banner-image");
+const bannerAlt = document.getElementById("banner-alt");
+const bannerError = document.getElementById("banner-error");
+const bannerSave = document.getElementById("banner-save");
+const bannersList = document.getElementById("banners-list");
 
 const accountsMonth = document.getElementById("accounts-month");
 const accountIncome = document.getElementById("account-income");
@@ -136,7 +167,10 @@ const client = config && config.url && config.anonKey
 
 let products = [];
 let productCosts = new Map();
+let productStock = new Map();
 let orders = [];
+let banners = [];
+let monthExpenses = [];
 let editingProduct = null;
 
 
@@ -332,8 +366,12 @@ adminLogout.addEventListener("click", async () => {
 
     products = [];
     productCosts = new Map();
+    productStock = new Map();
     orders = [];
+    banners = [];
+    monthExpenses = [];
 
+    bannersList.replaceChildren();
     productsList.replaceChildren();
     ordersList.replaceChildren();
     accountProducts.replaceChildren();
@@ -357,7 +395,8 @@ function selectTab(tab) {
     [
         [tabProducts, viewProducts],
         [tabOrders, viewOrders],
-        [tabAccounts, viewAccounts]
+        [tabAccounts, viewAccounts],
+        [tabBanners, viewBanners]
     ].forEach(([item, view]) => {
 
         item.classList.toggle("active", item === tab);
@@ -371,11 +410,16 @@ function selectTab(tab) {
         loadAccounts();
     }
 
+    if (tab === tabBanners) {
+        loadBanners();
+    }
+
 }
 
 tabProducts.addEventListener("click", () => selectTab(tabProducts));
 tabOrders.addEventListener("click", () => selectTab(tabOrders));
 tabAccounts.addEventListener("click", () => selectTab(tabAccounts));
+tabBanners.addEventListener("click", () => selectTab(tabBanners));
 
 
 // ==========================================
@@ -402,7 +446,7 @@ async function loadProducts() {
 
     products = data;
 
-    await loadProductCosts();
+    await Promise.all([loadProductCosts(), loadProductStock()]);
 
     renderProducts();
 
@@ -425,6 +469,47 @@ async function loadProductCosts() {
     }
 
     productCosts = new Map(data.map(item => [item.product_id, item.cost]));
+
+}
+
+async function loadProductStock() {
+
+    const { data, error } = await client
+        .from("product_stock")
+        .select("*");
+
+    if (error) {
+
+        console.error("Error al cargar el stock:", error);
+
+        showError(adminMessage, "No se pudo cargar el stock.");
+
+        return;
+
+    }
+
+    productStock = new Map();
+
+    data.forEach(item => {
+
+        const rows = productStock.get(item.product_id) ?? [];
+
+        rows.push(item);
+
+        productStock.set(item.product_id, rows);
+
+    });
+
+}
+
+function getStockText(product) {
+
+    if (!product.track_stock) return "Sin control de stock";
+
+    const total = (productStock.get(product.id) ?? [])
+        .reduce((sum, item) => sum + item.quantity, 0);
+
+    return total === 0 ? "Agotado" : `Stock: ${total}`;
 
 }
 
@@ -466,6 +551,10 @@ function createProductRow(product) {
         badges.append(createText("span", "Destacado", "admin-badge"));
     }
 
+    if (product.on_offer) {
+        badges.append(createText("span", "Oferta", "admin-badge"));
+    }
+
     if (!product.active) {
         badges.append(createText("span", "Oculto", "admin-badge admin-badge--off"));
     }
@@ -479,7 +568,7 @@ function createProductRow(product) {
         createText("h2", product.name),
         createText("p", product.price > 0 ? formatPrice(product.price) : "Consultar precio", "admin-row__price"),
         createText("p", options, "admin-row__options"),
-        createText("p", getCostText(product), "admin-row__options"),
+        createText("p", `${getStockText(product)} · ${getCostText(product)}`, "admin-row__options"),
         badges
     );
 
@@ -529,6 +618,126 @@ function renderProducts() {
 // 8. PRODUCTOS: FORMULARIO
 // ==========================================
 
+function getSelectedSizes() {
+
+    return Array.from(productSizes)
+        .filter(input => input.checked)
+        .map(input => input.value);
+
+}
+
+function renderStockGrid() {
+
+    // Conserva lo que ya estaba escrito al cambiar talles o colores.
+
+    const typed = new Map(
+        Array.from(productStockGrid.querySelectorAll("input"), input => {
+            return [`${input.dataset.size}|${input.dataset.color}`, input.value];
+        })
+    );
+
+    const saved = editingProduct
+        ? productStock.get(editingProduct.id) ?? []
+        : [];
+
+    const sizes = getSelectedSizes();
+    const colors = parseColors(productColors.value);
+
+    const combinations = (sizes.length ? sizes : [""]).flatMap(size => {
+        return (colors.length ? colors : [""]).map(color => ({ size, color }));
+    });
+
+    productStockGrid.hidden = !productTrackStock.checked;
+
+    productStockGrid.replaceChildren(...combinations.map(({ size, color }) => {
+
+        const key = `${size}|${color}`;
+
+        const label = document.createElement("label");
+        const input = document.createElement("input");
+
+        const savedRow = saved.find(item => {
+            return item.size === size && item.color === color;
+        });
+
+        input.type = "number";
+        input.min = "0";
+        input.step = "1";
+        input.inputMode = "numeric";
+        input.required = true;
+        input.dataset.size = size;
+        input.dataset.color = color;
+        input.value = typed.get(key) ?? savedRow?.quantity ?? 0;
+
+        label.append(
+            createText("span", [size, color].filter(Boolean).join(" · ") || "Cantidad"),
+            input
+        );
+
+        return label;
+
+    }));
+
+}
+
+async function saveProductStock(productId) {
+
+    const existing = productStock.get(productId) ?? [];
+
+    if (!productTrackStock.checked) {
+
+        const { error } = await client
+            .from("product_stock")
+            .delete()
+            .eq("product_id", productId);
+
+        if (error) throw error;
+
+        return;
+
+    }
+
+    const rows = Array.from(productStockGrid.querySelectorAll("input"), input => ({
+        product_id: productId,
+        size: input.dataset.size,
+        color: input.dataset.color,
+        quantity: Number(input.value)
+    }));
+
+    const { error } = await client.from("product_stock").upsert(rows);
+
+    if (error) throw error;
+
+    const removed = existing.filter(item => {
+
+        return !rows.some(row => {
+            return row.size === item.size && row.color === item.color;
+        });
+
+    });
+
+    for (const item of removed) {
+
+        const { error: deleteError } = await client
+            .from("product_stock")
+            .delete()
+            .eq("product_id", productId)
+            .eq("size", item.size)
+            .eq("color", item.color);
+
+        if (deleteError) throw deleteError;
+
+    }
+
+}
+
+productTrackStock.addEventListener("change", renderStockGrid);
+productColors.addEventListener("input", renderStockGrid);
+
+productSizes.forEach(input => {
+    input.addEventListener("change", renderStockGrid);
+});
+
 function openProductForm(product = null) {
 
     editingProduct = product;
@@ -549,12 +758,19 @@ function openProductForm(product = null) {
         productActive.checked = product.active;
         productFeatured.checked = product.featured;
         productColors.value = product.colors.join(", ");
+        productOffer.checked = product.on_offer;
+        productComparePrice.value = product.compare_price ?? "";
+        productTrackStock.checked = product.track_stock;
 
         productSizes.forEach(input => {
             input.checked = product.sizes.includes(input.value);
         });
 
     }
+
+    productStockGrid.replaceChildren();
+
+    renderStockGrid();
 
     productImagePreview.hidden = !product || !product.image_url;
 
@@ -673,9 +889,12 @@ productForm.addEventListener("submit", async event => {
             active: productActive.checked,
             featured: productFeatured.checked,
             colors: parseColors(productColors.value),
-            sizes: Array.from(productSizes)
-                .filter(input => input.checked)
-                .map(input => input.value)
+            sizes: getSelectedSizes(),
+            on_offer: productOffer.checked,
+            compare_price: productComparePrice.value === ""
+                ? null
+                : Number(productComparePrice.value),
+            track_stock: productTrackStock.checked
         };
 
         if (newImageUrl) {
@@ -693,6 +912,7 @@ productForm.addEventListener("submit", async event => {
         if (error) throw error;
 
         await saveProductCost(productId);
+        await saveProductStock(productId);
 
         if (newImageUrl && editingProduct) {
             await removeStoredImage(editingProduct.image_url);
@@ -847,7 +1067,12 @@ async function changeOrderStatus(order, status, select) {
 
         select.value = order.status;
 
-        showError(adminMessage, "No se pudo cambiar el estado del pedido.");
+        showError(
+            adminMessage,
+            /Sin stock/.test(error.message)
+                ? "No hay stock suficiente para reactivar este pedido."
+                : "No se pudo cambiar el estado del pedido."
+        );
 
         return;
 
@@ -856,6 +1081,10 @@ async function changeOrderStatus(order, status, select) {
     order.status = status;
 
     renderOrders();
+
+    // Cancelar o reactivar cambia el stock.
+
+    await loadProducts();
 
 }
 
@@ -928,11 +1157,35 @@ function createOrderCard(order) {
 
     card.append(header, items);
 
+    if (order.delivery_method) {
+
+        card.append(createText(
+            "p",
+            `${DELIVERY_NAMES[order.delivery_method]}: ${order.delivery_zone}`,
+            "admin-order__delivery"
+        ));
+
+    }
+
     if (order.details) {
         card.append(createText("p", order.details, "admin-order__details"));
     }
 
-    if (order.status === "pendiente" && order.payment_method !== "entrega") {
+    if (order.mp_status) {
+
+        const operation = order.mp_payment_id
+            ? ` Operación ${order.mp_payment_id}.`
+            : "";
+
+        card.append(
+            createText(
+                "p",
+                `${MP_STATUS_NAMES[order.mp_status] ?? order.mp_status}${operation}`,
+                "cart-pending"
+            )
+        );
+
+    } else if (order.status === "pendiente" && order.payment_method !== "entrega") {
 
         card.append(
             createText("p", "Esperando comprobante de pago.", "cart-pending")
@@ -976,6 +1229,76 @@ function renderOrders() {
 }
 
 ordersFilter.addEventListener("change", renderOrders);
+
+
+// Descargas para Excel
+
+function toCsvCell(value) {
+
+    const text = String(value ?? "");
+
+    // Evita que Excel ejecute como fórmula lo que escribió un cliente.
+
+    const safeText = /^[=+\-@\t\r]/.test(text) ? `'${text}` : text;
+
+    return `"${safeText.replace(/"/g, '""')}"`;
+
+}
+
+function downloadCsv(fileName, rows) {
+
+    const content = rows
+        .map(row => row.map(toCsvCell).join(";"))
+        .join("\r\n");
+
+    const file = new Blob([`\ufeff${content}`], { type: "text/csv;charset=utf-8" });
+
+    const link = document.createElement("a");
+
+    link.href = URL.createObjectURL(file);
+    link.download = fileName;
+
+    link.click();
+
+    URL.revokeObjectURL(link.href);
+
+}
+
+ordersExport.addEventListener("click", () => {
+
+    downloadCsv("ventas-movea.csv", [
+        ["Pedido", "Fecha", "Cliente", "Teléfono", "Productos", "Entrega", "Zona", "Pago", "Estado", "Total"],
+        ...orders.map(order => [
+            order.code,
+            formatDate(order.created_at),
+            order.customer_name,
+            order.customer_phone,
+            order.order_items
+                .map(item => `${item.quantity}x ${item.name}${getVariantText(item)}`)
+                .join(", "),
+            DELIVERY_NAMES[order.delivery_method] ?? "",
+            order.delivery_zone,
+            PAYMENT_NAMES[order.payment_method],
+            STATUS_NAMES[order.status],
+            order.total
+        ])
+    ]);
+
+});
+
+expensesExport.addEventListener("click", () => {
+
+    downloadCsv(`gastos-movea-${accountsMonth.value}.csv`, [
+        ["Fecha", "Concepto", "Categoría", "Importe"],
+        ...monthExpenses.map(expense => [
+            expense.spent_on,
+            expense.concept,
+            EXPENSE_CATEGORY_NAMES[expense.category],
+            expense.amount
+        ])
+    ]);
+
+});
 
 
 // ==========================================
@@ -1214,6 +1537,8 @@ async function loadAccounts() {
 
     }
 
+    monthExpenses = expenses.data;
+
     renderAccounts(summarizeSales(sales.data), expenses.data);
 
 }
@@ -1280,7 +1605,236 @@ expenseDate.value = getToday();
 
 
 // ==========================================
-// 12. INICIALIZAR
+// 12. BANNERS
+// ==========================================
+
+async function loadBanners() {
+
+    const { data, error } = await client
+        .from("banners")
+        .select("*")
+        .order("sort_order")
+        .order("created_at");
+
+    if (error) {
+
+        console.error("Error al cargar banners:", error);
+
+        showError(adminMessage, "No se pudieron cargar los banners.");
+
+        return;
+
+    }
+
+    banners = data;
+
+    renderBanners();
+
+}
+
+async function updateBanner(banner, values) {
+
+    const { error } = await client
+        .from("banners")
+        .update(values)
+        .eq("id", banner.id);
+
+    if (error) {
+
+        console.error("Error al actualizar el banner:", error);
+
+        showError(adminMessage, "No se pudo actualizar el banner.");
+
+    }
+
+    return !error;
+
+}
+
+async function moveBanner(banner, direction) {
+
+    const position = banners.indexOf(banner);
+    const other = banners[position + direction];
+
+    if (!other) return;
+
+    // Se reenumera todo: los banners nuevos comparten el mismo orden.
+
+    const ordered = [...banners];
+
+    ordered[position] = other;
+    ordered[position + direction] = banner;
+
+    await Promise.all(ordered.map((item, index) => {
+        return updateBanner(item, { sort_order: index + 1 });
+    }));
+
+    await loadBanners();
+
+}
+
+async function deleteBanner(banner) {
+
+    const { error } = await client
+        .from("banners")
+        .delete()
+        .eq("id", banner.id);
+
+    if (error) {
+
+        console.error("Error al eliminar el banner:", error);
+
+        showError(adminMessage, "No se pudo eliminar el banner.");
+
+        return;
+
+    }
+
+    await removeStoredImage(banner.image_url);
+    await loadBanners();
+
+}
+
+function createBannerRow(banner, index) {
+
+    const row = document.createElement("article");
+    row.className = "admin-banner";
+
+    const image = document.createElement("img");
+
+    image.src = new URL(banner.image_url, siteRoot).href;
+    image.alt = "";
+
+    const info = document.createElement("div");
+    info.className = "admin-row__info";
+
+    info.append(createText("h2", banner.alt));
+
+    if (!banner.active) {
+        info.append(createText("span", "Oculto", "admin-badge admin-badge--off"));
+    }
+
+    const actions = document.createElement("div");
+    actions.className = "admin-row__actions";
+
+    const upButton = createButton("Subir", "admin-link", () => moveBanner(banner, -1));
+    const downButton = createButton("Bajar", "admin-link", () => moveBanner(banner, 1));
+
+    upButton.disabled = index === 0;
+    downButton.disabled = index === banners.length - 1;
+
+    const deleteButton = createButton("Eliminar", "admin-link admin-link--danger", () => {
+
+        if (deleteButton.dataset.confirm) {
+
+            deleteBanner(banner);
+
+            return;
+
+        }
+
+        deleteButton.dataset.confirm = "true";
+        deleteButton.textContent = "¿Confirmar?";
+
+    });
+
+    actions.append(
+        upButton,
+        downButton,
+        createButton(banner.active ? "Ocultar" : "Mostrar", "admin-link", async () => {
+
+            await updateBanner(banner, { active: !banner.active });
+            await loadBanners();
+
+        }),
+        deleteButton
+    );
+
+    row.append(image, info, actions);
+
+    return row;
+
+}
+
+function renderBanners() {
+
+    bannersList.replaceChildren(...banners.map(createBannerRow));
+
+    if (banners.length === 0) {
+
+        bannersList.append(
+            createText("p", "No hay banners. La tienda muestra los que vienen por defecto.", "product-filter__empty")
+        );
+
+    }
+
+}
+
+bannerForm.addEventListener("submit", async event => {
+
+    event.preventDefault();
+
+    showError(bannerError, "");
+
+    const file = bannerImage.files[0];
+
+    if (!IMAGE_TYPES.includes(file.type)) {
+
+        showError(bannerError, "La imagen debe ser JPG, PNG o WebP.");
+
+        return;
+
+    }
+
+    if (file.size > MAX_IMAGE_SIZE) {
+
+        showError(bannerError, "La imagen no puede superar los 5 MB.");
+
+        return;
+
+    }
+
+    bannerSave.disabled = true;
+
+    let imageUrl = null;
+
+    try {
+
+        imageUrl = await uploadProductImage(file);
+
+        const { error } = await client.from("banners").insert({
+            image_url: imageUrl,
+            alt: bannerAlt.value.trim(),
+            sort_order: banners.length + 1
+        });
+
+        if (error) throw error;
+
+        bannerForm.reset();
+
+        await loadBanners();
+
+    } catch (error) {
+
+        console.error("Error al guardar el banner:", error);
+
+        if (imageUrl) {
+            await removeStoredImage(imageUrl);
+        }
+
+        showError(bannerError, "No se pudo guardar el banner. Probá de nuevo.");
+
+    } finally {
+
+        bannerSave.disabled = false;
+
+    }
+
+});
+
+
+// ==========================================
+// 13. INICIALIZAR
 // ==========================================
 
 async function init() {

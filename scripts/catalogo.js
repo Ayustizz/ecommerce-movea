@@ -33,6 +33,10 @@
         card.dataset.sizes = product.sizes.join("|");
         card.dataset.colors = product.colors.join("|");
 
+        if (product.track_stock) {
+            card.dataset.stock = JSON.stringify(product.product_stock);
+        }
+
         const figure = document.createElement("figure");
         const image = document.createElement("img");
 
@@ -50,6 +54,17 @@
 
         const footer = document.createElement("div");
         footer.classList.add("product-card__footer");
+
+        if (product.on_offer && product.compare_price > product.price) {
+
+            const comparePrice = document.createElement("s");
+
+            comparePrice.classList.add("product-card__compare");
+            comparePrice.textContent = formatCardPrice(product.compare_price);
+
+            footer.appendChild(comparePrice);
+
+        }
 
         const price = document.createElement("p");
         price.classList.add("product-card__price");
@@ -70,6 +85,31 @@
 
         card.append(figure, title, description, footer);
 
+        if (product.on_offer) {
+
+            const label = document.createElement("span");
+
+            label.classList.add("offer-label");
+            label.textContent = "Oferta";
+
+            card.prepend(label);
+
+        }
+
+        const isSoldOut =
+            product.track_stock &&
+            !product.product_stock.some(item => item.quantity > 0);
+
+        if (isSoldOut) {
+
+            card.classList.add("is-sold-out");
+
+            button.disabled = true;
+            button.replaceChildren("Agotado");
+            button.removeAttribute("aria-label");
+
+        }
+
         return card;
 
     }
@@ -79,7 +119,7 @@
         try {
 
             const response = await fetch(
-                `${config.url}/rest/v1/products?select=id,name,description,category,price,image_url,featured,sizes,colors&order=sort_order.asc,created_at.asc`,
+                `${config.url}/rest/v1/products?select=id,name,description,category,price,image_url,featured,sizes,colors,on_offer,compare_price,track_stock,product_stock(size,color,quantity)&order=sort_order.asc,created_at.asc`,
                 { headers: { apikey: config.anonKey } }
             );
 
@@ -89,9 +129,13 @@
 
             const products = await response.json();
 
-            const visibleProducts = list.dataset.catalog === "featured"
-                ? products.filter(product => product.featured)
-                : products;
+            const filters = {
+                featured: product => product.featured,
+                offers: product => product.on_offer,
+                all: () => true
+            };
+
+            const visibleProducts = products.filter(filters[list.dataset.catalog]);
 
             const emptyMessage = list.querySelector("[data-product-empty]");
 

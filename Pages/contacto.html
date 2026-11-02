@@ -5,7 +5,7 @@
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/; style-src 'self' https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/ https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/ https://fonts.googleapis.com; font-src https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/ https://fonts.gstatic.com; img-src 'self' data: https://bynttfvlwyplfovklzxa.supabase.co; connect-src 'self' https://bynttfvlwyplfovklzxa.supabase.co; frame-src https://www.google.com/maps/; object-src 'none'; base-uri 'self'; form-action 'self'">
     <meta name="referrer" content="strict-origin-when-cross-origin">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Comunicate con Movea por WhatsApp, Instagram o Facebook.">
+    <meta name="description" content="Comunicate con Movea por WhatsApp o Instagram.">
 
     <link rel="icon" href="../img/favicon.svg" type="image/svg+xml">
 
@@ -39,11 +39,11 @@
         <section class="contacto-intro" aria-labelledby="contacto-titulo">
             <p class="contacto-etiqueta">¿Dudas?</p>
             <h1 id="contacto-titulo">Comunicate con nosotros</h1>
-            <p>Escribinos por tu canal favorito. Te ayudamos con tus consultas.</p>
+            <p>Te respondemos personalmente. Para consultas de pedidos, WhatsApp es la vía más rápida.</p>
         </section>
 
         <section class="redes contacto-canales" aria-label="Canales de contacto">
-            <a class="contacto-card whatsapp" href="https://wa.me/5491157368246" target="_blank" rel="noopener noreferrer" aria-label="Escribinos por WhatsApp al 11-5736-8246">
+            <a class="contacto-card contacto-card--main whatsapp" href="https://wa.me/5491157368246" target="_blank" rel="noopener noreferrer" aria-label="Escribinos por WhatsApp al 11-5736-8246">
                 <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
                 <h2>WhatsApp</h2>
                 <span>11-5736-8246</span>
@@ -56,13 +56,37 @@
                 <span>@moveafitt</span>
                 <span class="contacto-accion">Visitar perfil <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></span>
             </a>
+        </section>
 
-            <a class="contacto-card facebook" href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Encontranos en Facebook como Movea Fit">
-                <i class="fa-brands fa-facebook" aria-hidden="true"></i>
-                <h2>Facebook</h2>
-                <span>movea_fit</span>
-                <span class="contacto-accion">Visitar página <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></span>
-            </a>
+        <section class="contacto-faq" aria-labelledby="faq-titulo">
+
+            <h2 id="faq-titulo">Preguntas frecuentes</h2>
+
+            <details>
+                <summary>¿Cómo hago un pedido?</summary>
+                <p>Elegí tus productos con su talle y color, completá tus datos en el carrito y envianos el pedido por WhatsApp. Ahí coordinamos todo con vos.</p>
+            </details>
+
+            <details>
+                <summary>¿Cómo puedo pagar?</summary>
+                <p>Con Mercado Pago, transferencia bancaria o efectivo al recibir. Pagando antes de la entrega tenés 15% de descuento.</p>
+            </details>
+
+            <details>
+                <summary>¿Cómo recibo mi pedido?</summary>
+                <p>Podés retirarlo en un punto de encuentro o recibirlo por Uber. El lugar, el día y el costo del envío se coordinan con vos por WhatsApp.</p>
+            </details>
+
+            <details>
+                <summary>¿Puedo cambiar una prenda?</summary>
+                <p>Sí, tenés 10 días para cambiar el talle o el color, con la prenda sin usar y con su etiqueta. Mirá <a href="./cambios.html">cambios y devoluciones</a>.</p>
+            </details>
+
+            <details>
+                <summary>¿Dónde están?</summary>
+                <p>Estamos en Tortuguitas, Buenos Aires. Vendemos online y coordinamos las entregas con cada clienta.</p>
+            </details>
+
         </section>
     </main>
 
@@ -72,11 +96,7 @@
         <h2>Redes sociales</h2>
         <div class="link_redes">
 
-            <a href="https://www.facebook.com/movea_fit/" target="_blank" rel="noopener noreferrer" aria-label="Movea en Facebook">
-                <i class="fa-brands fa-facebook" aria-hidden="true"></i>
-            </a>
-
-            <a href="https://www.instagram.com/moveafitt/" target="_blank" rel="noopener noreferrer" aria-label="Movea en Instagram">
+<a href="https://www.instagram.com/moveafitt/" target="_blank" rel="noopener noreferrer" aria-label="Movea en Instagram">
                 <i class="fa-brands fa-instagram" aria-hidden="true"></i>
             </a>
 
@@ -118,11 +138,15 @@
     <section class="ayuda_link_footer">
         <h2>Ayuda</h2>
         <ul class="ayuda_footer">
-<li>
-                <a href="./contacto.html">
-                    Contacto
-                </a>
-            </li>
+
+                <li><a class="footer-regret" href="./arrepentimiento.html">Botón de arrepentimiento</a></li>
+
+                <li><a href="./cambios.html">Cambios y devoluciones</a></li>
+
+                <li><a href="./privacidad.html">Privacidad</a></li>
+
+                <li><a href="./contacto.html">Contacto</a></li>
+
         </ul>
     </section>
 

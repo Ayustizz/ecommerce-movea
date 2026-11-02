@@ -152,6 +152,16 @@
                     Cuentas
                 </button>
 
+                <button
+                    type="button"
+                    id="tab-banners"
+                    class="admin-tab"
+                    role="tab"
+                    aria-selected="false"
+                    aria-controls="view-banners">
+                    Banners
+                </button>
+
             </div>
 
             <p id="admin-message" class="admin-error" role="alert" hidden></p>
@@ -224,6 +234,16 @@
 
                     <div class="checkout-field">
 
+                        <label for="product-compare-price">Precio anterior</label>
+
+                        <input type="number" id="product-compare-price" min="0" step="1" inputmode="numeric">
+
+                        <small>Opcional. Se muestra tachado si marcás el producto como oferta.</small>
+
+                    </div>
+
+                    <div class="checkout-field">
+
                         <label for="product-cost">Costo por unidad</label>
 
                         <input type="number" id="product-cost" min="0" step="1" inputmode="numeric">
@@ -258,6 +278,21 @@
 
                     </div>
 
+                    <fieldset class="admin-sizes">
+
+                        <legend>Stock</legend>
+
+                        <div class="admin-form__checks">
+                            <label>
+                                <input type="checkbox" id="product-track-stock">
+                                Controlar stock por talle y color
+                            </label>
+                        </div>
+
+                        <div id="product-stock-grid" class="admin-stock-grid" hidden></div>
+
+                    </fieldset>
+
                     <div class="checkout-field">
 
                         <label for="product-image">Foto (JPG, PNG o WebP, hasta 5 MB)</label>
@@ -278,6 +313,11 @@
                         <label>
                             <input type="checkbox" id="product-featured">
                             Destacado en el inicio
+                        </label>
+
+                        <label>
+                            <input type="checkbox" id="product-offer">
+                            Etiqueta de oferta
                         </label>
 
                     </div>
@@ -347,6 +387,10 @@
 
                     <p id="orders-count" class="product-filter__count" aria-live="polite"></p>
 
+                    <button type="button" id="orders-export" class="admin-button admin-button--auto admin-button--soft">
+                        Descargar ventas
+                    </button>
+
                 </div>
 
                 <div id="orders-list" class="admin-list" aria-live="polite"></div>
@@ -369,6 +413,10 @@
                     </div>
 
                     <p class="product-filter__count">Solo cuenta pedidos pagados o entregados.</p>
+
+                    <button type="button" id="expenses-export" class="admin-button admin-button--auto admin-button--soft">
+                        Descargar gastos del mes
+                    </button>
 
                 </div>
 
@@ -487,6 +535,47 @@
                 </form>
 
                 <div id="expenses-list" class="admin-list" aria-live="polite"></div>
+
+            </section>
+
+
+            <!-- BANNERS -->
+
+            <section id="view-banners" role="tabpanel" aria-labelledby="tab-banners" hidden>
+
+                <form id="banner-form" class="admin-card admin-form">
+
+                    <h2>Nuevo banner</h2>
+
+                    <div class="checkout-field">
+
+                        <label for="banner-image">Imagen *</label>
+
+                        <input type="file" id="banner-image" accept="image/jpeg,image/png,image/webp" required>
+
+                        <small>Tamaño ideal: 1600 × 700 px, hasta 5 MB. En otras medidas se recorta.</small>
+
+                    </div>
+
+                    <div class="checkout-field">
+
+                        <label for="banner-alt">¿Qué dice o muestra? *</label>
+
+                        <input type="text" id="banner-alt" minlength="2" maxlength="160" placeholder="Ej.: Nueva colección de otoño" required>
+
+                        <small>Lo usan los lectores de pantalla y Google.</small>
+
+                    </div>
+
+                    <p id="banner-error" class="admin-error" role="alert" hidden></p>
+
+                    <button type="submit" id="banner-save" class="admin-button">
+                        Agregar banner
+                    </button>
+
+                </form>
+
+                <div id="banners-list" class="admin-list" aria-live="polite"></div>
 
             </section>
 

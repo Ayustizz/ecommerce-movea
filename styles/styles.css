@@ -2641,3 +2641,235 @@ body.cart-open {
         transform: none;
     }
 }
+
+
+/* =====================================
+   MOVEA - PAGO CON MERCADO PAGO
+===================================== */
+
+.checkout-error {
+    margin: 14px 0 0;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #fbeeee;
+    color: #a33b3b;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.checkout-submit:disabled {
+    cursor: wait;
+    opacity: 0.65;
+    transform: none;
+}
+
+main > .pago-card {
+    grid-column: 1 / -1;
+}
+
+.pago-card {
+    display: grid;
+    gap: 14px;
+    width: min(100%, 460px);
+    margin: clamp(16px, 6vw, 56px) auto;
+    padding: clamp(24px, 5vw, 36px);
+    border: 1px solid var(--movea-border);
+    border-radius: 20px;
+    background: var(--movea-surface);
+    box-shadow: var(--movea-shadow);
+    text-align: center;
+}
+
+.pago-card h1 {
+    font-size: clamp(24px, 6vw, 30px);
+}
+
+.pago-card p {
+    margin: 0;
+    color: var(--movea-muted);
+    line-height: 1.6;
+}
+
+.pago-card .pago-codigo {
+    color: var(--movea-ink);
+    font-family: 'Rubik', sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+}
+
+.pago-icono {
+    color: #36734c;
+    font-size: 50px;
+}
+
+.pago-icono--error {
+    color: #a33b3b;
+}
+
+.pago-card .checkout-submit {
+    margin-top: 6px;
+    text-decoration: none;
+}
+
+.pago-volver {
+    display: grid;
+    place-items: center;
+    min-height: 44px;
+    color: #704747;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+
+/* =====================================
+   MOVEA - STOCK Y OFERTAS
+===================================== */
+
+.product_card.is-sold-out figure,
+.product_card.is-sold-out h2 {
+    cursor: default;
+}
+
+.product_card.is-sold-out img {
+    opacity: 0.45;
+}
+
+.product_card.is-sold-out:hover img {
+    transform: none;
+}
+
+.product-card__order:disabled {
+    border-color: #eee5e1;
+    background: #eee5e1;
+    color: var(--movea-muted);
+    cursor: not-allowed;
+}
+
+.product-card__compare {
+    color: var(--movea-muted);
+    font-size: 13px;
+}
+
+.product-options__list input:disabled + span {
+    border-color: #eee5e1;
+    background: #f6f0ec;
+    color: #b5aaa7;
+    text-decoration: line-through;
+    cursor: not-allowed;
+}
+
+.product-dialog__stock {
+    margin: 0;
+    color: #946b25;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.movea-carousel.is-single .carousel-control-prev,
+.movea-carousel.is-single .carousel-control-next,
+.movea-carousel.is-single .carousel-indicators {
+    display: none;
+}
+
+
+/* =====================================
+   MOVEA - CONTACTO
+===================================== */
+
+.contacto-faq {
+    display: grid;
+    grid-column: 1 / -1;
+    gap: 10px;
+    width: min(100%, 760px);
+    margin: 8px auto 12px;
+}
+
+.contacto-faq h2 {
+    margin: 0 0 6px;
+    color: var(--movea-ink);
+    text-align: center;
+    font-size: clamp(22px, 4vw, 28px);
+}
+
+.contacto-faq details {
+    border: 1px solid var(--movea-border);
+    border-radius: 14px;
+    background: var(--movea-surface);
+}
+
+.contacto-faq summary {
+    min-height: 48px;
+    padding: 13px 16px;
+    color: var(--movea-ink);
+    font-family: 'Rubik', sans-serif;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.contacto-faq p {
+    margin: 0;
+    padding: 0 16px 14px;
+    color: var(--movea-muted);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.contacto-card--main {
+    border-color: #c9e8d4;
+}
+
+
+/* =====================================
+   MOVEA - PÁGINAS LEGALES
+===================================== */
+
+main > .legal-page {
+    grid-column: 1 / -1;
+}
+
+.legal-page {
+    width: min(100%, 760px);
+    margin: 0 auto;
+    padding: clamp(20px, 4vw, 40px);
+    border: 1px solid var(--movea-border);
+    border-radius: 20px;
+    background: var(--movea-surface);
+}
+
+.legal-page h1 {
+    margin-bottom: 20px;
+    font-size: clamp(28px, 5vw, 38px);
+    text-align: left;
+}
+
+.legal-page h2 {
+    margin: 24px 0 8px;
+    color: var(--movea-ink);
+    font-size: 19px;
+}
+
+.legal-page p {
+    color: #514745;
+    font-size: 15px;
+    line-height: 1.7;
+}
+
+.legal-page a {
+    color: #704747;
+}
+
+.legal-form {
+    margin: 20px 0;
+}
+
+.legal-page .legal-note {
+    margin: 0;
+    color: var(--movea-muted);
+    font-size: 13px;
+}
+
+footer .footer-regret {
+    color: #e8c6b8;
+    font-weight: 600;
+    text-decoration: underline;
+}

@@ -19,9 +19,13 @@ Para activarlo:
 5. En SQL Editor, darle permisos: insert into public.admins (user_id) select id from auth.users where email = 'EMAIL_DEL_ADMIN';
 6. Copiar la URL del proyecto y la clave pública (anon o publishable) en scripts/supabase-config.js.
 
-Si la base ya existía, ejecutar una sola vez y en orden las migraciones que falten: supabase/migracion-talles-y-colores.sql, supabase/migracion-cuentas.sql y supabase/migracion-seguridad.sql. En una base nueva alcanza con schema.sql.
+Si la base ya existía, ejecutar una sola vez y en orden las migraciones que falten: supabase/migracion-talles-y-colores.sql, supabase/migracion-cuentas.sql, supabase/migracion-seguridad.sql, supabase/migracion-mercadopago.sql y supabase/migracion-tienda.sql. En una base nueva alcanza con schema.sql.
 
 Seguridad: cada página tiene una política de contenido (Content-Security-Policy) que nombra el proyecto de Supabase. Si cambia el proyecto, hay que actualizar esa dirección en las seis páginas. Si se actualiza Bootstrap, Font Awesome o Supabase, hay que recalcular los valores integrity.
+
+Stock: el pedido descuenta las unidades al crearse y cancelar lo devuelve. Con dominio propio, cambiar el <base> de 404.html y las direcciones og: de index.html.
+
+Mercado Pago: el pago directo usa las funciones de supabase/functions. Se instalan en Supabase con "Verify JWT" desactivado, con los secretos MP_ACCESS_TOKEN y MP_WEBHOOK_SECRET, y se activa con mercadoPago: true en scripts/supabase-config.js. El token de Mercado Pago nunca va en el código.
 
 Cuentas del panel: los costos y gastos son privados. Las ganancias se calculan con pedidos pagados o entregados, usando el costo que tenía cada producto al venderse.
 

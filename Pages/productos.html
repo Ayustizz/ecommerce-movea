@@ -525,16 +525,7 @@
 
             <div class="link_redes">
 
-                <a
-                    href="https://www.facebook.com/movea_fit/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="Movea en Facebook"
-                >
-                    <i class="fa-brands fa-facebook" aria-hidden="true"></i>
-                </a>
-
-                <a
+<a
                     href="https://www.instagram.com/moveafitt/"
                     target="_blank"
                     rel="noopener noreferrer"
@@ -580,9 +571,15 @@
             <h2>Ayuda</h2>
 
             <ul class="ayuda_footer">
-<li>
-                    <a href="./contacto.html">Contacto</a>
-                </li>
+
+                <li><a class="footer-regret" href="./arrepentimiento.html">Botón de arrepentimiento</a></li>
+
+                <li><a href="./cambios.html">Cambios y devoluciones</a></li>
+
+                <li><a href="./privacidad.html">Privacidad</a></li>
+
+                <li><a href="./contacto.html">Contacto</a></li>
+
 
             </ul>
 
@@ -754,6 +751,73 @@
     </div>
 
 
+    <!-- Entrega -->
+    <fieldset class="checkout-payment">
+
+        <legend>¿Cómo querés recibirlo?</legend>
+
+        <label class="payment-option">
+
+            <input
+                type="radio"
+                name="deliveryMethod"
+                value="encuentro"
+                required>
+
+            <span class="payment-option-content">
+
+                <strong>Punto de encuentro</strong>
+
+                <span class="payment-no-discount">
+                    Coordinamos el lugar con vos
+                </span>
+
+            </span>
+
+        </label>
+
+
+        <label class="payment-option">
+
+            <input
+                type="radio"
+                name="deliveryMethod"
+                value="uber">
+
+            <span class="payment-option-content">
+
+                <strong>Envío por Uber</strong>
+
+                <span class="payment-no-discount">
+                    Coordinamos el envío y su costo con vos
+                </span>
+
+            </span>
+
+        </label>
+
+    </fieldset>
+
+
+    <div class="checkout-field">
+
+        <label id="delivery-zone-label" for="delivery-zone">
+            Tu zona o barrio *
+        </label>
+
+        <input
+            type="text"
+            id="delivery-zone"
+            name="deliveryZone"
+            placeholder="Ej.: Tortuguitas"
+            minlength="2"
+            maxlength="200"
+            autocomplete="address-level2"
+            required>
+
+    </div>
+
+
     <!-- Aclaraciones -->
     <div class="checkout-field">
 
@@ -766,7 +830,7 @@
             name="customerDetails"
             rows="2"
             maxlength="1000"
-            placeholder="Ej.: dirección de entrega o cualquier otro detalle."></textarea>
+            placeholder="Ej.: horarios en los que podés recibirlo."></textarea>
 
     </div>
 
@@ -877,13 +941,15 @@
     </div>
 
 
+    <p id="checkout-error" class="checkout-error" role="alert" hidden></p>
+
     <button
         type="submit"
         id="checkout-submit"
         class="checkout-submit">
 
         <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
-        Enviar pedido por WhatsApp
+        <span id="checkout-submit-text">Enviar pedido por WhatsApp</span>
 
     </button>
 
@@ -901,11 +967,22 @@
 
             <i class="fa-solid fa-circle-check order-done__icon" aria-hidden="true"></i>
 
-            <h3>¡Ya casi está!</h3>
+            <h3>¡Último paso!</h3>
 
             <p id="order-done-code" class="order-done__code" hidden></p>
 
-            <p>Revisá que el mensaje se haya enviado en WhatsApp.</p>
+            <p>Envianos el mensaje por WhatsApp para confirmar tu pedido y coordinar la entrega.</p>
+
+            <a
+                id="order-done-whatsapp"
+                class="checkout-submit"
+                target="_blank"
+                rel="noopener noreferrer">
+
+                <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
+                Enviar pedido por WhatsApp
+
+            </a>
 
             <div id="order-done-proof" class="payment-info" hidden>
 
@@ -919,17 +996,6 @@
                 <div id="order-done-payment"></div>
 
             </div>
-
-            <a
-                id="order-done-whatsapp"
-                class="checkout-submit"
-                target="_blank"
-                rel="noopener noreferrer">
-
-                <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
-                Abrir WhatsApp de nuevo
-
-            </a>
 
             <button type="button" id="order-done-finish" class="cart-clear">
                 Terminar y vaciar carrito
@@ -994,6 +1060,8 @@
                 <legend>Color</legend>
                 <div class="product-options__list"></div>
             </fieldset>
+
+            <p id="product-dialog-stock" class="product-dialog__stock" hidden></p>
 
             <div class="product-quantity">
 

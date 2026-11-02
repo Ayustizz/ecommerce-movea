@@ -7,6 +7,13 @@
     <meta name="referrer" content="strict-origin-when-cross-origin">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Movea">
+    <meta property="og:title" content="Movea | Ropa deportiva">
+    <meta property="og:description" content="Ropa deportiva para mujeres: buzos, joggings, tops y shorts.">
+    <meta property="og:image" content="https://ayustizz.github.io/ecommerce-movea/img/banners/Banner_inicio.jpg">
+    <meta property="og:url" content="https://ayustizz.github.io/ecommerce-movea/">
+
     <meta name="theme-color" content="#311c1c">
 
     <meta name="description" content="Ropa deportiva para mujeres: buzos, joggings, tops y shorts. Comprá online y coordiná tu pedido por WhatsApp.">
@@ -685,6 +692,73 @@
         </div>
 
 
+        <!-- Entrega -->
+        <fieldset class="checkout-payment">
+
+            <legend>¿Cómo querés recibirlo?</legend>
+
+            <label class="payment-option">
+
+                <input
+                    type="radio"
+                    name="deliveryMethod"
+                    value="encuentro"
+                    required>
+
+                <span class="payment-option-content">
+
+                    <strong>Punto de encuentro</strong>
+
+                    <span class="payment-no-discount">
+                        Coordinamos el lugar con vos
+                    </span>
+
+                </span>
+
+            </label>
+
+
+            <label class="payment-option">
+
+                <input
+                    type="radio"
+                    name="deliveryMethod"
+                    value="uber">
+
+                <span class="payment-option-content">
+
+                    <strong>Envío por Uber</strong>
+
+                    <span class="payment-no-discount">
+                        Coordinamos el envío y su costo con vos
+                    </span>
+
+                </span>
+
+            </label>
+
+        </fieldset>
+
+
+        <div class="checkout-field">
+
+            <label id="delivery-zone-label" for="delivery-zone">
+                Tu zona o barrio *
+            </label>
+
+            <input
+                type="text"
+                id="delivery-zone"
+                name="deliveryZone"
+                placeholder="Ej.: Tortuguitas"
+                minlength="2"
+                maxlength="200"
+                autocomplete="address-level2"
+                required>
+
+        </div>
+
+
         <!-- Aclaraciones -->
         <div class="checkout-field">
 
@@ -697,7 +771,7 @@
                 name="customerDetails"
                 rows="2"
                 maxlength="1000"
-                placeholder="Ej.: dirección de entrega o cualquier otro detalle."></textarea>
+                placeholder="Ej.: horarios en los que podés recibirlo."></textarea>
 
         </div>
 
@@ -808,13 +882,15 @@
         </div>
 
 
+        <p id="checkout-error" class="checkout-error" role="alert" hidden></p>
+
         <button
             type="submit"
             id="checkout-submit"
             class="checkout-submit">
 
             <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
-            Enviar pedido por WhatsApp
+            <span id="checkout-submit-text">Enviar pedido por WhatsApp</span>
 
         </button>
 
@@ -832,11 +908,22 @@
 
                 <i class="fa-solid fa-circle-check order-done__icon" aria-hidden="true"></i>
 
-                <h3>¡Ya casi está!</h3>
+                <h3>¡Último paso!</h3>
 
                 <p id="order-done-code" class="order-done__code" hidden></p>
 
-                <p>Revisá que el mensaje se haya enviado en WhatsApp.</p>
+                <p>Envianos el mensaje por WhatsApp para confirmar tu pedido y coordinar la entrega.</p>
+
+                <a
+                    id="order-done-whatsapp"
+                    class="checkout-submit"
+                    target="_blank"
+                    rel="noopener noreferrer">
+
+                    <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
+                    Enviar pedido por WhatsApp
+
+                </a>
 
                 <div id="order-done-proof" class="payment-info" hidden>
 
@@ -850,17 +937,6 @@
                     <div id="order-done-payment"></div>
 
                 </div>
-
-                <a
-                    id="order-done-whatsapp"
-                    class="checkout-submit"
-                    target="_blank"
-                    rel="noopener noreferrer">
-
-                    <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
-                    Abrir WhatsApp de nuevo
-
-                </a>
 
                 <button type="button" id="order-done-finish" class="cart-clear">
                     Terminar y vaciar carrito
@@ -904,17 +980,7 @@
 
             <div class="link_redes">
 
-                <a
-                    href="https://www.facebook.com/movea_fit/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="Movea en Facebook">
-
-                    <i class="fa-brands fa-facebook" aria-hidden="true"></i>
-
-                </a>
-
-                <a
+<a
                     href="https://www.instagram.com/moveafitt/"
                     target="_blank"
                     rel="noopener noreferrer"
@@ -953,7 +1019,15 @@
             <h2>Ayuda</h2>
 
             <ul class="ayuda_footer">
-<li><a href="./Pages/contacto.html">Contacto</a></li>
+
+                <li><a class="footer-regret" href="./Pages/arrepentimiento.html">Botón de arrepentimiento</a></li>
+
+                <li><a href="./Pages/cambios.html">Cambios y devoluciones</a></li>
+
+                <li><a href="./Pages/privacidad.html">Privacidad</a></li>
+
+                <li><a href="./Pages/contacto.html">Contacto</a></li>
+
 
             </ul>
 
@@ -1017,6 +1091,8 @@
                 <div class="product-options__list"></div>
             </fieldset>
 
+            <p id="product-dialog-stock" class="product-dialog__stock" hidden></p>
+
             <div class="product-quantity">
 
                 <span id="product-quantity-label">Cantidad</span>
@@ -1062,8 +1138,9 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 
-    <!-- Productos del panel -->
+    <!-- Productos y banners del panel -->
     <script src="./scripts/supabase-config.js"></script>
+    <script src="./scripts/banners.js"></script>
     <script src="./scripts/catalogo.js"></script>
 
     <!-- Filtros existentes -->

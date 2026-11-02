@@ -5,16 +5,21 @@
 // 1. CONFIGURACIÓN
 // ==========================================
 
-const WHATSAPP_NUMBER = "5491157368246";
+const WHATSAPP_NUMBER = "5491151227752";
 
 const STORAGE_KEY = "movea-cart-v2";
 
 // Datos provisionales: reemplazarlos cuando tengas
 // el link y el alias definitivos de Movea.
 
+const DELIVERY_NAMES = {
+    encuentro: "Punto de encuentro, a coordinar",
+    uber: "Envío por Uber, a coordinar"
+};
+
 const PAYMENT_CONFIG = {
     // Si queda vacío, el link se envía por WhatsApp.
-    mercadoPagoLink: "",
+    mercadoPagoLink: "https://link.mercadopago.com.ar/amimporta",
     alias: "Martuu.rocio",
     discount: 15
 };
@@ -46,6 +51,8 @@ const checkoutForm = document.getElementById("checkout-form");
 const customerName = document.getElementById("customer-name");
 const customerPhone = document.getElementById("customer-phone");
 const customerDetails = document.getElementById("customer-details");
+const deliveryZone = document.getElementById("delivery-zone");
+const deliveryZoneLabel = document.getElementById("delivery-zone-label");
 
 const paymentInfo = document.getElementById("payment-info");
 
@@ -54,6 +61,9 @@ const checkoutDiscount = document.getElementById("checkout-discount");
 const checkoutTotal = document.getElementById("checkout-total");
 const checkoutDiscountRow = document.getElementById("checkout-discount-row");
 const checkoutPending = document.getElementById("checkout-pending");
+const checkoutError = document.getElementById("checkout-error");
+const checkoutSubmit = document.getElementById("checkout-submit");
+const checkoutSubmitText = document.getElementById("checkout-submit-text");
 
 const orderDone = document.getElementById("order-done");
 const orderDoneCode = document.getElementById("order-done-code");
@@ -72,6 +82,7 @@ const productDialogDescription = document.getElementById("product-dialog-descrip
 const productDialogSizes = document.getElementById("product-dialog-sizes");
 const productDialogColors = document.getElementById("product-dialog-colors");
 const productDialogError = document.getElementById("product-dialog-error");
+const productDialogStock = document.getElementById("product-dialog-stock");
 const productQuantityLess = document.getElementById("product-quantity-less");
 const productQuantityMore = document.getElementById("product-quantity-more");
 const productQuantityValue = document.getElementById("product-quantity-value");
@@ -276,6 +287,7 @@ document.addEventListener("keydown", event => {
 
 let selectedProduct = null;
 let selectedQuantity = 1;
+let selectedMaximum = 99;
 let toastTimer = null;
 
 
@@ -294,6 +306,7 @@ function getCardProduct(card) {
         price: Number(card.dataset.price),
         sizes: splitOptions(card.dataset.sizes),
         colors: splitOptions(card.dataset.colors),
+        stock: card.dataset.stock ? JSON.parse(card.dataset.stock) : null,
         image: card.querySelector("img").src,
         priceText: card.querySelector(".product-card__price").textContent.trim(),
         description: card.querySelector(":scope > p").textContent.trim()
@@ -321,6 +334,8 @@ function renderProductOptions(fieldset, options, inputName) {
         input.value = option;
         input.checked = options.length === 1;
 
+        input.addEventListener("change", updateStockAvailability);
+
         text.textContent = option;
 
         label.append(input, text);
@@ -331,14 +346,82 @@ function renderProductOptions(fieldset, options, inputName) {
 }
 
 
+function getSelectedOption(inputName) {
+
+    const selected = productDialogForm.querySelector(
+        `input[name="${inputName}"]:checked`
+    );
+
+    return selected ? selected.value : null;
+
+}
+
+
+// Unidades disponibles. Sin talle o color elegido, cuenta todas las opciones.
+
+function getAvailableUnits(size, color) {
+
+    if (!selectedProduct.stock) return 99;
+
+    return selectedProduct.stock
+        .filter(item => {
+
+            return (
+                (size === null || item.size === size) &&
+                (color === null || item.color === color)
+            );
+
+        })
+        .reduce((total, item) => total + item.quantity, 0);
+
+}
+
+
+function updateStockAvailability() {
+
+    const size = getSelectedOption("productSize");
+    const color = getSelectedOption("productColor");
+
+    productDialogForm.querySelectorAll('input[name="productSize"]').forEach(input => {
+        input.disabled = getAvailableUnits(input.value, color) === 0;
+    });
+
+    productDialogForm.querySelectorAll('input[name="productColor"]').forEach(input => {
+        input.disabled = getAvailableUnits(size, input.value) === 0;
+    });
+
+    productDialogForm.querySelectorAll("input:checked:disabled").forEach(input => {
+        input.checked = false;
+    });
+
+    const hasSize = selectedProduct.sizes.length === 0 || getSelectedOption("productSize");
+    const hasColor = selectedProduct.colors.length === 0 || getSelectedOption("productColor");
+
+    const units = getAvailableUnits(
+        getSelectedOption("productSize") ?? (selectedProduct.sizes.length ? null : ""),
+        getSelectedOption("productColor") ?? (selectedProduct.colors.length ? null : "")
+    );
+
+    selectedMaximum = hasSize && hasColor ? Math.min(units, 99) : 99;
+
+    setSelectedQuantity(selectedQuantity);
+
+    const isLow = selectedProduct.stock && hasSize && hasColor && units <= 3;
+
+    productDialogStock.textContent = `${units === 1 ? "Queda 1 unidad" : `Quedan ${units} unidades`}`;
+    productDialogStock.hidden = !isLow;
+
+}
+
+
 function setSelectedQuantity(quantity) {
 
-    selectedQuantity = Math.min(Math.max(quantity, 1), 99);
+    selectedQuantity = Math.min(Math.max(quantity, 1), Math.max(selectedMaximum, 1));
 
     productQuantityValue.textContent = selectedQuantity;
 
     productQuantityLess.disabled = selectedQuantity === 1;
-    productQuantityMore.disabled = selectedQuantity === 99;
+    productQuantityMore.disabled = selectedQuantity >= selectedMaximum;
 
 }
 
@@ -366,7 +449,10 @@ function openProductDialog(card) {
     renderProductOptions(productDialogSizes, product.sizes, "productSize");
     renderProductOptions(productDialogColors, product.colors, "productColor");
 
-    setSelectedQuantity(1);
+    selectedQuantity = 1;
+    selectedMaximum = 99;
+
+    updateStockAvailability();
 
     productDialogError.hidden = true;
 
@@ -384,8 +470,10 @@ document.addEventListener("click", event => {
         ".product_card .product-card__order, .product_card figure, .product_card h2"
     );
 
-    if (trigger) {
-        openProductDialog(trigger.closest(".product_card"));
+    const card = trigger && trigger.closest(".product_card");
+
+    if (card && !card.classList.contains("is-sold-out")) {
+        openProductDialog(card);
     }
 
 });
@@ -519,7 +607,11 @@ function showPrepaidPrices() {
 
         const price = Number(card.dataset.price);
 
-        if (!(price > 0) || card.querySelector(".product-card__prepaid")) return;
+            if (
+            !(price > 0) ||
+            card.classList.contains("is-sold-out") ||
+            card.querySelector(".product-card__prepaid")
+        ) return;
 
         const prepaid = document.createElement("p");
 
@@ -813,6 +905,17 @@ function getSelectedPaymentMethod() {
 }
 
 
+function getSelectedDeliveryMethod() {
+
+    const selected = checkoutForm.querySelector(
+        'input[name="deliveryMethod"]:checked'
+    );
+
+    return selected ? selected.value : "";
+
+}
+
+
 function updateCheckoutSummary() {
 
     const paymentMethod = getSelectedPaymentMethod();
@@ -919,9 +1022,43 @@ function createPaymentAccess(paymentMethod) {
 }
 
 
+function usesMercadoPagoCheckout(paymentMethod) {
+
+    const config = window.MOVEA_SUPABASE;
+    const totals = calculateTotals();
+
+    return Boolean(
+        paymentMethod === "mercado-pago" &&
+        config &&
+        config.mercadoPago &&
+        isOrderSavingEnabled() &&
+        totals.subtotal > 0 &&
+        !totals.hasPendingPrices
+    );
+
+}
+
+
+function updateSubmitButton(paymentMethod) {
+
+    const isOnline = usesMercadoPagoCheckout(paymentMethod);
+
+    checkoutSubmitText.textContent = isOnline
+        ? "Pagar con Mercado Pago"
+        : "Enviar pedido por WhatsApp";
+
+    checkoutSubmit.querySelector("i").hidden = isOnline;
+
+}
+
+
 function renderPaymentInfo() {
 
     const paymentMethod = getSelectedPaymentMethod();
+
+    checkoutError.hidden = true;
+
+    updateSubmitButton(paymentMethod);
 
     paymentInfo.innerHTML = "";
     paymentInfo.hidden = true;
@@ -939,7 +1076,16 @@ function renderPaymentInfo() {
     const title = document.createElement("strong");
     const description = document.createElement("p");
 
-    if (isPrepaidMethod(paymentMethod)) {
+    if (usesMercadoPagoCheckout(paymentMethod)) {
+
+        title.textContent = "Pago mediante Mercado Pago";
+
+        description.textContent =
+            "Tenés un 15% de descuento. Te llevamos a Mercado Pago para pagar de forma segura.";
+
+        paymentInfo.append(title, description);
+
+    } else if (isPrepaidMethod(paymentMethod)) {
 
         title.textContent = paymentMethod === "mercado-pago"
             ? "Pago mediante Mercado Pago"
@@ -974,6 +1120,18 @@ checkoutForm.addEventListener("change", event => {
 
     if (event.target.name === "paymentMethod") {
         renderPaymentInfo();
+    }
+
+    if (event.target.name === "deliveryMethod") {
+
+        deliveryZoneLabel.textContent = event.target.value === "uber"
+            ? "Dirección de entrega *"
+            : "Tu zona o barrio *";
+
+        deliveryZone.placeholder = event.target.value === "uber"
+            ? "Ej.: Av. Siempre Viva 123, Tortuguitas"
+            : "Ej.: Tortuguitas";
+
     }
 
 });
@@ -1066,6 +1224,10 @@ function generateWhatsAppMessage(orderCode) {
 
     }
 
+    message += "\nENTREGA\n";
+    message += `${DELIVERY_NAMES[getSelectedDeliveryMethod()]}\n`;
+    message += `${deliveryZone.value.trim()}\n`;
+
     if (details) {
 
         message += "\nACLARACIONES\n";
@@ -1137,9 +1299,6 @@ function createOrderCode() {
 }
 
 
-// No se espera la respuesta: el navegador bloquea
-// abrir WhatsApp si no es inmediato al clic.
-
 async function saveOrder(orderCode, paymentMethod) {
 
     const config = window.MOVEA_SUPABASE;
@@ -1161,6 +1320,8 @@ async function saveOrder(orderCode, paymentMethod) {
                     p_customer_phone: customerPhone.value.trim(),
                     p_details: customerDetails.value.trim(),
                     p_payment_method: paymentMethod,
+                    p_delivery_method: getSelectedDeliveryMethod(),
+                    p_delivery_zone: deliveryZone.value.trim(),
                     p_items: cart.map(product => {
                         return {
                             id: product.id,
@@ -1174,12 +1335,104 @@ async function saveOrder(orderCode, paymentMethod) {
         );
 
         if (!response.ok) {
+
+            const detail = await response.json().catch(() => ({}));
+
+            // Sin stock o sobre el tope: el pedido no se puede tomar.
+
+            if (/^(Sin stock|Máximo)/.test(detail.message ?? "")) {
+                return { saved: false, blockedBy: detail.message };
+            }
+
             throw new Error(`Respuesta ${response.status}`);
+
         }
+
+        return { saved: true };
 
     } catch (error) {
 
         console.error("No se pudo guardar el pedido:", error);
+
+        return { saved: false };
+
+    }
+
+}
+
+
+async function createPaymentLink(orderCode) {
+
+    const config = window.MOVEA_SUPABASE;
+
+    const response = await fetch(
+        `${config.url}/functions/v1/crear-pago`,
+        {
+            method: "POST",
+            headers: {
+                apikey: config.anonKey,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ code: orderCode })
+        }
+    );
+
+    if (!response.ok) {
+        throw new Error(`Respuesta ${response.status}`);
+    }
+
+    const { init_point: paymentLink } = await response.json();
+
+    const { protocol, hostname } = new URL(paymentLink);
+
+    if (protocol !== "https:" || !hostname.endsWith(".mercadopago.com.ar")) {
+        throw new Error("Dirección de pago inesperada");
+    }
+
+    return paymentLink;
+
+}
+
+
+async function startOnlinePayment() {
+
+    checkoutError.hidden = true;
+
+    checkoutSubmit.disabled = true;
+    checkoutSubmitText.textContent = "Conectando con Mercado Pago...";
+
+    try {
+
+        const orderCode = createOrderCode();
+
+        const result = await saveOrder(orderCode, "mercado-pago");
+
+        if (result.blockedBy) {
+
+            showBlockedOrder(result.blockedBy);
+
+            return;
+
+        }
+
+        if (!result.saved) {
+            throw new Error("Pedido sin guardar");
+        }
+
+        location.href = await createPaymentLink(orderCode);
+
+    } catch (error) {
+
+        console.error("No se pudo iniciar el pago:", error);
+
+        checkoutError.textContent =
+            "No pudimos conectar con Mercado Pago. Probá de nuevo o elegí otro método de pago.";
+
+        checkoutError.hidden = false;
+
+        checkoutSubmit.disabled = false;
+
+        updateSubmitButton("mercado-pago");
 
     }
 
@@ -1218,10 +1471,66 @@ checkoutForm.addEventListener("submit", event => {
 
     }
 
-    const orderCode = isOrderSavingEnabled() ? createOrderCode() : "";
+    if (usesMercadoPagoCheckout(paymentMethod)) {
 
-    if (orderCode) {
-        saveOrder(orderCode, paymentMethod);
+        startOnlinePayment();
+
+        return;
+
+    }
+
+    submitOrder(paymentMethod);
+
+});
+
+
+function showBlockedOrder(message) {
+
+    checkoutError.textContent =
+        `${message}. Quitá ese producto del carrito o elegí otra opción.`.replace("..", ".");
+
+    checkoutError.hidden = false;
+
+    checkoutSubmit.disabled = false;
+
+    updateSubmitButton(getSelectedPaymentMethod());
+
+}
+
+
+async function submitOrder(paymentMethod) {
+
+    checkoutError.hidden = true;
+
+    let orderCode = "";
+
+    if (isOrderSavingEnabled()) {
+
+        checkoutSubmit.disabled = true;
+        checkoutSubmitText.textContent = "Guardando pedido...";
+
+        const candidate = createOrderCode();
+
+        const result = await saveOrder(candidate, paymentMethod);
+
+        if (result.blockedBy) {
+
+            showBlockedOrder(result.blockedBy);
+
+            return;
+
+        }
+
+        // Si falla la conexión, el pedido igual se puede enviar por WhatsApp.
+
+        if (result.saved) {
+            orderCode = candidate;
+        }
+
+        checkoutSubmit.disabled = false;
+
+        updateSubmitButton(paymentMethod);
+
     }
 
     const message = generateWhatsAppMessage(orderCode);
@@ -1229,15 +1538,9 @@ checkoutForm.addEventListener("submit", event => {
     const whatsappURL =
         `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
 
-    window.open(
-        whatsappURL,
-        "_blank",
-        "noopener,noreferrer"
-    );
-
     showOrderDone(orderCode, paymentMethod, whatsappURL);
 
-});
+}
 
 
 function showOrderDone(orderCode, paymentMethod, whatsappURL) {
@@ -1319,7 +1622,16 @@ document.addEventListener("movea:catalogo", event => {
         return (
             item &&
             (item.sizes.length === 0 || item.sizes.includes(product.size)) &&
-            (item.colors.length === 0 || item.colors.includes(product.color))
+            (item.colors.length === 0 || item.colors.includes(product.color)) &&
+            (!item.track_stock || item.product_stock.some(stock => {
+
+                return (
+                    stock.size === product.size &&
+                    stock.color === product.color &&
+                    stock.quantity > 0
+                );
+
+            }))
         );
 
     };

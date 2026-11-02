@@ -170,6 +170,9 @@ main > .admin-panel {
     display: flex;
     gap: 6px;
     justify-self: center;
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
     padding: 5px;
     border: 1px solid var(--movea-border);
     border-radius: 14px;
@@ -177,7 +180,9 @@ main > .admin-panel {
 }
 
 .admin-tab {
-    padding: 9px 22px;
+    flex: 0 0 auto;
+    min-height: 44px;
+    padding: 9px 18px;
     border: 0;
     border-radius: 10px;
     background: transparent;
@@ -248,6 +253,29 @@ main > .admin-panel {
 
 .admin-sizes .admin-form__checks {
     margin-bottom: 0;
+}
+
+.admin-stock-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.admin-stock-grid label {
+    display: grid;
+    gap: 4px;
+    color: var(--movea-muted);
+    font-size: 12px;
+}
+
+.admin-stock-grid input {
+    width: 100%;
+    min-height: 44px;
+    padding: 8px 10px;
+    border: 1px solid var(--movea-border);
+    border-radius: 10px;
+    color: var(--movea-ink);
 }
 
 .admin-form__preview {
@@ -517,6 +545,43 @@ main > .admin-panel {
     justify-self: start;
 }
 
+.admin-order__delivery {
+    margin: 0;
+    color: var(--movea-ink);
+    font-size: 13px;
+    font-weight: 500;
+    overflow-wrap: anywhere;
+}
+
+.admin-link:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+}
+
+.admin-banner {
+    display: grid;
+    gap: 10px;
+    padding: 12px;
+    border: 1px solid var(--movea-border);
+    border-radius: 16px;
+    background-color: var(--movea-surface);
+}
+
+.admin-banner img {
+    width: 100%;
+    aspect-ratio: 16 / 7;
+    border-radius: 10px;
+    background: #f6f0ec;
+    object-fit: cover;
+}
+
+.admin-banner h2 {
+    margin: 0 0 4px;
+    color: var(--movea-ink);
+    font-size: 15px;
+    overflow-wrap: anywhere;
+}
+
 .admin-order {
     display: grid;
     gap: 12px;
@@ -635,6 +700,11 @@ main > .admin-panel {
 
     .admin-stats--accounts {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .admin-banner {
+        grid-template-columns: 240px minmax(0, 1fr) auto;
+        align-items: center;
     }
 
     .admin-expense {

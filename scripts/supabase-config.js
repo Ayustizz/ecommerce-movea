@@ -6,5 +6,8 @@
 
 window.MOVEA_SUPABASE = {
     url: "https://bynttfvlwyplfovklzxa.supabase.co",
-    anonKey: "sb_publishable_aOYae4AFMNPPF1uk_D6bGA_XyRRZMOv"
+    anonKey: "sb_publishable_aOYae4AFMNPPF1uk_D6bGA_XyRRZMOv",
+
+    // Activar cuando las funciones de Mercado Pago estén instaladas.
+    mercadoPago: false
 };
