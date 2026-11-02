@@ -7,7 +7,7 @@
 
 const WHATSAPP_NUMBER = "5491157368246";
 
-const STORAGE_KEY = "movea-cart-v1";
+const STORAGE_KEY = "movea-cart-v2";
 
 // Datos provisionales: reemplazarlos cuando tengas
 // el link y el alias definitivos de Movea.
@@ -44,6 +44,7 @@ const checkoutBack = document.getElementById("checkout-back");
 const checkoutForm = document.getElementById("checkout-form");
 
 const customerName = document.getElementById("customer-name");
+const customerPhone = document.getElementById("customer-phone");
 const customerDetails = document.getElementById("customer-details");
 
 const paymentInfo = document.getElementById("payment-info");
@@ -53,6 +54,31 @@ const checkoutDiscount = document.getElementById("checkout-discount");
 const checkoutTotal = document.getElementById("checkout-total");
 const checkoutDiscountRow = document.getElementById("checkout-discount-row");
 const checkoutPending = document.getElementById("checkout-pending");
+
+const orderDone = document.getElementById("order-done");
+const orderDoneCode = document.getElementById("order-done-code");
+const orderDoneProof = document.getElementById("order-done-proof");
+const orderDonePayment = document.getElementById("order-done-payment");
+const orderDoneWhatsapp = document.getElementById("order-done-whatsapp");
+const orderDoneFinish = document.getElementById("order-done-finish");
+
+const productDialog = document.getElementById("product-dialog");
+const productDialogForm = document.getElementById("product-dialog-form");
+const productDialogClose = document.getElementById("product-dialog-close");
+const productDialogImage = document.getElementById("product-dialog-image");
+const productDialogName = document.getElementById("product-dialog-name");
+const productDialogPrice = document.getElementById("product-dialog-price");
+const productDialogDescription = document.getElementById("product-dialog-description");
+const productDialogSizes = document.getElementById("product-dialog-sizes");
+const productDialogColors = document.getElementById("product-dialog-colors");
+const productDialogError = document.getElementById("product-dialog-error");
+const productQuantityLess = document.getElementById("product-quantity-less");
+const productQuantityMore = document.getElementById("product-quantity-more");
+const productQuantityValue = document.getElementById("product-quantity-value");
+
+const cartToast = document.getElementById("cart-toast");
+const cartToastText = document.getElementById("cart-toast-text");
+const cartToastOpen = document.getElementById("cart-toast-open");
 
 
 // ==========================================
@@ -75,7 +101,10 @@ function loadCart() {
 
             return (
                 product &&
+                typeof product.key === "string" &&
                 typeof product.id === "string" &&
+                typeof product.size === "string" &&
+                typeof product.color === "string" &&
                 typeof product.name === "string" &&
                 product.name.length > 0 &&
                 Number.isFinite(product.price) &&
@@ -242,77 +271,288 @@ document.addEventListener("keydown", event => {
 
 
 // ==========================================
-// 9. AGREGAR PRODUCTOS
+// 9. ELEGIR TALLE Y COLOR
 // ==========================================
 
-document.addEventListener("click", event => {
+let selectedProduct = null;
+let selectedQuantity = 1;
+let toastTimer = null;
 
-    const button = event.target.closest(".product-card__order");
 
-    if (!button) return;
+function splitOptions(value = "") {
 
-    const productCard = button.closest(".product_card");
+    return value ? value.split("|") : [];
 
-    if (!productCard) return;
+}
 
-    const id = productCard.dataset.id;
-    const name = productCard.dataset.name;
-    const price = Number(productCard.dataset.price);
 
-    if (
-        !id ||
-        !name ||
-        !Number.isFinite(price) ||
-        price < 0
-    ) {
+function getCardProduct(card) {
 
-        console.error("Producto con datos incorrectos:", productCard);
+    return {
+        id: card.dataset.id,
+        name: card.dataset.name,
+        price: Number(card.dataset.price),
+        sizes: splitOptions(card.dataset.sizes),
+        colors: splitOptions(card.dataset.colors),
+        image: card.querySelector("img").src,
+        priceText: card.querySelector(".product-card__price").textContent.trim(),
+        description: card.querySelector(":scope > p").textContent.trim()
+    };
+
+}
+
+
+function renderProductOptions(fieldset, options, inputName) {
+
+    const list = fieldset.querySelector(".product-options__list");
+
+    list.replaceChildren();
+
+    fieldset.hidden = options.length === 0;
+
+    options.forEach(option => {
+
+        const label = document.createElement("label");
+        const input = document.createElement("input");
+        const text = document.createElement("span");
+
+        input.type = "radio";
+        input.name = inputName;
+        input.value = option;
+        input.checked = options.length === 1;
+
+        text.textContent = option;
+
+        label.append(input, text);
+        list.appendChild(label);
+
+    });
+
+}
+
+
+function setSelectedQuantity(quantity) {
+
+    selectedQuantity = Math.min(Math.max(quantity, 1), 99);
+
+    productQuantityValue.textContent = selectedQuantity;
+
+    productQuantityLess.disabled = selectedQuantity === 1;
+    productQuantityMore.disabled = selectedQuantity === 99;
+
+}
+
+
+function openProductDialog(card) {
+
+    const product = getCardProduct(card);
+
+    if (!product.id || !product.name || !Number.isFinite(product.price)) {
+
+        console.error("Producto con datos incorrectos:", card);
 
         return;
 
     }
 
-    const existingProduct = cart.find(product => {
-        return product.id === id;
-    });
+    selectedProduct = product;
+
+    productDialogImage.src = product.image;
+    productDialogImage.alt = product.name;
+    productDialogName.textContent = product.name;
+    productDialogPrice.textContent = product.priceText;
+    productDialogDescription.textContent = product.description;
+
+    renderProductOptions(productDialogSizes, product.sizes, "productSize");
+    renderProductOptions(productDialogColors, product.colors, "productColor");
+
+    setSelectedQuantity(1);
+
+    productDialogError.hidden = true;
+
+    productDialog.showModal();
+    productDialog.scrollTop = 0;
+
+    document.body.classList.add("cart-open");
+
+}
+
+
+document.addEventListener("click", event => {
+
+    const trigger = event.target.closest(
+        ".product_card .product-card__order, .product_card figure, .product_card h2"
+    );
+
+    if (trigger) {
+        openProductDialog(trigger.closest(".product_card"));
+    }
+
+});
+
+
+productDialogClose.addEventListener("click", () => productDialog.close());
+
+productDialog.addEventListener("click", event => {
+
+    // Clic en el fondo, fuera del contenido.
+
+    if (event.target === productDialog) {
+        productDialog.close();
+    }
+
+});
+
+productDialog.addEventListener("close", () => {
+    document.body.classList.remove("cart-open");
+});
+
+productQuantityLess.addEventListener("click", () => {
+    setSelectedQuantity(selectedQuantity - 1);
+});
+
+productQuantityMore.addEventListener("click", () => {
+    setSelectedQuantity(selectedQuantity + 1);
+});
+
+
+productDialogForm.addEventListener("submit", event => {
+
+    event.preventDefault();
+
+    const size = productDialogForm.querySelector(
+        'input[name="productSize"]:checked'
+    );
+
+    const color = productDialogForm.querySelector(
+        'input[name="productColor"]:checked'
+    );
+
+    const missing = selectedProduct.sizes.length > 0 && !size
+        ? "Elegí un talle."
+        : selectedProduct.colors.length > 0 && !color
+            ? "Elegí un color."
+            : "";
+
+    productDialogError.textContent = missing;
+    productDialogError.hidden = !missing;
+
+    if (missing) return;
+
+    addToCart(
+        selectedProduct,
+        size ? size.value : "",
+        color ? color.value : "",
+        selectedQuantity
+    );
+
+    productDialog.close();
+
+    showToast(`${selectedProduct.name} se agregó al carrito`);
+
+});
+
+
+// ==========================================
+// 9B. AGREGAR PRODUCTOS
+// ==========================================
+
+function addToCart(product, size, color, quantity) {
+
+    const key = `${product.id}|${size}|${color}`;
+
+    const existingProduct = cart.find(item => item.key === key);
 
     if (existingProduct) {
 
-        if (existingProduct.quantity >= 99) {
-
-            alert("Alcanzaste el máximo de unidades para este producto.");
-
-            return;
-
-        }
-
-        existingProduct.quantity++;
+        existingProduct.quantity = Math.min(
+            existingProduct.quantity + quantity,
+            99
+        );
 
     } else {
 
         cart.push({
-            id,
-            name,
-            price,
-            quantity: 1
+            key,
+            id: product.id,
+            name: product.name,
+            size,
+            color,
+            price: product.price,
+            quantity
         });
 
     }
 
     saveCart();
     renderCart();
+
+}
+
+
+function showToast(text) {
+
+    cartToastText.textContent = text;
+    cartToast.hidden = false;
+
+    clearTimeout(toastTimer);
+
+    toastTimer = setTimeout(() => {
+        cartToast.hidden = true;
+    }, 4000);
+
+}
+
+
+cartToastOpen.addEventListener("click", () => {
+
+    cartToast.hidden = true;
+
     openCart();
 
 });
+
+
+function showPrepaidPrices() {
+
+    document.querySelectorAll(".product_card[data-id]").forEach(card => {
+
+        const price = Number(card.dataset.price);
+
+        if (!(price > 0) || card.querySelector(".product-card__prepaid")) return;
+
+        const prepaid = document.createElement("p");
+
+        const prepaidPrice =
+            price - Math.round(price * PAYMENT_CONFIG.discount / 100);
+
+        prepaid.classList.add("product-card__prepaid");
+        prepaid.textContent = `${formatPrice(prepaidPrice)} pagando antes`;
+
+        card.querySelector(".product-card__price").after(prepaid);
+
+    });
+
+}
+
+
+function getVariantText(product) {
+
+    return [
+        product.size && `Talle ${product.size}`,
+        product.color
+    ].filter(Boolean).join(", ");
+
+}
 
 
 // ==========================================
 // 10. MODIFICAR CANTIDADES
 // ==========================================
 
-function changeQuantity(id, amount) {
+function changeQuantity(key, amount) {
 
-    const product = cart.find(item => item.id === id);
+    const product = cart.find(item => item.key === key);
 
     if (!product) return;
 
@@ -320,7 +560,7 @@ function changeQuantity(id, amount) {
 
     if (newQuantity <= 0) {
 
-        removeProduct(id);
+        removeProduct(key);
 
         return;
 
@@ -346,9 +586,9 @@ function changeQuantity(id, amount) {
 // 11. ELIMINAR PRODUCTOS
 // ==========================================
 
-function removeProduct(id) {
+function removeProduct(key) {
 
-    cart = cart.filter(product => product.id !== id);
+    cart = cart.filter(product => product.key !== key);
 
     saveCart();
     renderCart();
@@ -377,7 +617,10 @@ function createCartItem(product) {
         ? formatPrice(product.price)
         : "Precio a consultar";
 
-    info.append(name, price);
+    const variant = document.createElement("p");
+    variant.textContent = getVariantText(product);
+
+    info.append(name, variant, price);
 
     const actions = document.createElement("div");
     actions.classList.add("cart-item-actions");
@@ -393,7 +636,7 @@ function createCartItem(product) {
     );
 
     decreaseButton.addEventListener("click", () => {
-        changeQuantity(product.id, -1);
+        changeQuantity(product.key, -1);
     });
 
     const quantity = document.createElement("span");
@@ -411,7 +654,7 @@ function createCartItem(product) {
     );
 
     increaseButton.addEventListener("click", () => {
-        changeQuantity(product.id, 1);
+        changeQuantity(product.key, 1);
     });
 
     const removeButton = document.createElement("button");
@@ -421,7 +664,7 @@ function createCartItem(product) {
     removeButton.classList.add("cart-item-remove");
 
     removeButton.addEventListener("click", () => {
-        removeProduct(product.id);
+        removeProduct(product.key);
     });
 
     actions.append(
@@ -532,9 +775,7 @@ function showCheckoutView() {
 
     updateCheckoutSummary();
 
-    const firstInput = customerName;
-
-    firstInput.focus();
+    customerName.focus();
 
 }
 
@@ -542,6 +783,7 @@ function showCheckoutView() {
 function showCartView() {
 
     checkoutSection.hidden = true;
+    orderDone.hidden = true;
 
     cartItems.hidden = false;
     cartSummary.hidden = false;
@@ -600,6 +842,83 @@ function updateCheckoutSummary() {
 // 18. INFORMACIÓN DEL MÉTODO DE PAGO
 // ==========================================
 
+function isPrepaidMethod(paymentMethod) {
+
+    return (
+        paymentMethod === "mercado-pago" ||
+        paymentMethod === "transferencia"
+    );
+
+}
+
+
+async function copyAlias(button) {
+
+    try {
+
+        await navigator.clipboard.writeText(PAYMENT_CONFIG.alias);
+
+        button.textContent = "¡Copiado!";
+
+    } catch (error) {
+
+        console.error("No se pudo copiar el alias:", error);
+
+        button.textContent = "Copialo a mano";
+
+    }
+
+}
+
+
+function createPaymentAccess(paymentMethod) {
+
+    const access = [];
+
+    if (paymentMethod === "transferencia") {
+
+        const alias = document.createElement("strong");
+
+        alias.classList.add("payment-alias");
+        alias.textContent = PAYMENT_CONFIG.alias;
+
+        const copyButton = document.createElement("button");
+
+        copyButton.type = "button";
+        copyButton.classList.add("payment-copy");
+        copyButton.textContent = "Copiar alias";
+
+        copyButton.addEventListener("click", () => copyAlias(copyButton));
+
+        access.push(alias, copyButton);
+
+    } else if (PAYMENT_CONFIG.mercadoPagoLink) {
+
+        const link = document.createElement("a");
+
+        link.href = PAYMENT_CONFIG.mercadoPagoLink;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.textContent = "Abrir link de Mercado Pago";
+
+        access.push(link);
+
+    } else {
+
+        const linkNote = document.createElement("p");
+
+        linkNote.textContent =
+            "Te enviaremos el link de pago por WhatsApp.";
+
+        access.push(linkNote);
+
+    }
+
+    return access;
+
+}
+
+
 function renderPaymentInfo() {
 
     const paymentMethod = getSelectedPaymentMethod();
@@ -620,52 +939,22 @@ function renderPaymentInfo() {
     const title = document.createElement("strong");
     const description = document.createElement("p");
 
-    if (paymentMethod === "mercado-pago") {
+    if (isPrepaidMethod(paymentMethod)) {
 
-        title.textContent = "Pago mediante Mercado Pago";
-
-        description.textContent =
-            "Tenés un 15% de descuento por pagar antes de la entrega.";
-
-        paymentInfo.append(title, description);
-
-        if (PAYMENT_CONFIG.mercadoPagoLink) {
-
-            const link = document.createElement("a");
-
-            link.href = PAYMENT_CONFIG.mercadoPagoLink;
-            link.target = "_blank";
-            link.rel = "noopener noreferrer";
-            link.textContent = "Abrir link de Mercado Pago";
-
-            paymentInfo.append(link);
-
-        } else {
-
-            const linkNote = document.createElement("p");
-
-            linkNote.textContent =
-                "Te enviaremos el link de pago por WhatsApp.";
-
-            paymentInfo.append(linkNote);
-
-        }
-
-    } else if (paymentMethod === "transferencia") {
-
-        title.textContent = "Pago mediante transferencia";
+        title.textContent = paymentMethod === "mercado-pago"
+            ? "Pago mediante Mercado Pago"
+            : "Pago mediante transferencia";
 
         description.textContent =
-            "Transferí el importe final a este alias:";
+            "Tenés un 15% de descuento por pagar antes de la entrega. Después de pagar, envianos el comprobante por WhatsApp.";
 
-        const alias = document.createElement("strong");
+        paymentInfo.append(
+            title,
+            description,
+            ...createPaymentAccess(paymentMethod)
+        );
 
-        alias.classList.add("payment-alias");
-        alias.textContent = PAYMENT_CONFIG.alias;
-
-        paymentInfo.append(title, description, alias);
-
-    } else if (paymentMethod === "entrega") {
+    } else {
 
         title.textContent = "Pago al momento de la entrega";
 
@@ -697,6 +986,7 @@ checkoutForm.addEventListener("change", event => {
 function generateWhatsAppMessage(orderCode) {
 
     const name = customerName.value.trim();
+    const phone = customerPhone.value.trim();
     const details = customerDetails.value.trim();
 
     const paymentMethod = getSelectedPaymentMethod();
@@ -718,13 +1008,20 @@ function generateWhatsAppMessage(orderCode) {
     }
 
     message += "DATOS DEL CLIENTE\n";
-    message += `Nombre: ${name}\n\n`;
+    message += `Nombre: ${name}\n`;
+    message += `Teléfono: ${phone}\n\n`;
 
     message += "PRODUCTOS\n";
 
     cart.forEach(product => {
 
         message += `• ${product.quantity}x ${product.name}`;
+
+        const variant = getVariantText(product);
+
+        if (variant) {
+            message += ` (${variant})`;
+        }
 
         if (product.price > 0) {
 
@@ -769,8 +1066,14 @@ function generateWhatsAppMessage(orderCode) {
 
     }
 
-    message += "\nDETALLES DEL PEDIDO\n";
-    message += `${details}\n\n`;
+    if (details) {
+
+        message += "\nACLARACIONES\n";
+        message += `${details}\n`;
+
+    }
+
+    message += "\n";
 
     message += "MÉTODO DE PAGO\n";
     message += `${paymentNames[paymentMethod]}\n`;
@@ -782,7 +1085,7 @@ function generateWhatsAppMessage(orderCode) {
             : "Espero el link de pago por WhatsApp.\n";
 
         message +=
-            "El pago queda pendiente de verificación por Movea.\n";
+            "Después de pagar, envío el comprobante por este chat.\n";
 
     } else if (paymentMethod === "transferencia") {
 
@@ -790,7 +1093,7 @@ function generateWhatsAppMessage(orderCode) {
             `Alias: ${PAYMENT_CONFIG.alias}\n`;
 
         message +=
-            "El pago queda pendiente de verificación por Movea.\n";
+            "Después de pagar, envío el comprobante por este chat.\n";
 
     } else {
 
@@ -855,10 +1158,16 @@ async function saveOrder(orderCode, paymentMethod) {
                 body: JSON.stringify({
                     p_code: orderCode,
                     p_customer_name: customerName.value.trim(),
+                    p_customer_phone: customerPhone.value.trim(),
                     p_details: customerDetails.value.trim(),
                     p_payment_method: paymentMethod,
                     p_items: cart.map(product => {
-                        return { id: product.id, quantity: product.quantity };
+                        return {
+                            id: product.id,
+                            size: product.size,
+                            color: product.color,
+                            quantity: product.quantity
+                        };
                     })
                 })
             }
@@ -926,6 +1235,46 @@ checkoutForm.addEventListener("submit", event => {
         "noopener,noreferrer"
     );
 
+    showOrderDone(orderCode, paymentMethod, whatsappURL);
+
+});
+
+
+function showOrderDone(orderCode, paymentMethod, whatsappURL) {
+
+    checkoutSection.hidden = true;
+    orderDone.hidden = false;
+
+    orderDoneCode.textContent = `Pedido ${orderCode}`;
+    orderDoneCode.hidden = !orderCode;
+
+    orderDoneProof.hidden = !isPrepaidMethod(paymentMethod);
+
+    orderDonePayment.replaceChildren(
+        ...(isPrepaidMethod(paymentMethod)
+            ? createPaymentAccess(paymentMethod)
+            : [])
+    );
+
+    orderDoneWhatsapp.href = whatsappURL;
+
+    orderDone.focus();
+
+}
+
+
+orderDoneFinish.addEventListener("click", () => {
+
+    cart = [];
+
+    saveCart();
+    renderCart();
+
+    checkoutForm.reset();
+
+    showCartView();
+    closeCart();
+
 });
 
 
@@ -940,14 +1289,12 @@ function syncCartWithPage() {
 
     document.querySelectorAll(".product_card[data-id]").forEach(card => {
 
-        const product = cart.find(item => {
-            return item.id === card.dataset.id;
+        cart.filter(item => item.id === card.dataset.id).forEach(product => {
+
+            product.name = card.dataset.name;
+            product.price = Number(card.dataset.price);
+
         });
-
-        if (!product) return;
-
-        product.name = card.dataset.name;
-        product.price = Number(card.dataset.price);
 
     });
 
@@ -965,7 +1312,19 @@ document.addEventListener("movea:catalogo", event => {
         event.detail.map(product => [product.id, product])
     );
 
-    cart = cart.filter(product => catalog.has(product.id));
+    const isAvailable = product => {
+
+        const item = catalog.get(product.id);
+
+        return (
+            item &&
+            (item.sizes.length === 0 || item.sizes.includes(product.size)) &&
+            (item.colors.length === 0 || item.colors.includes(product.color))
+        );
+
+    };
+
+    cart = cart.filter(isAvailable);
 
     cart.forEach(product => {
 
@@ -976,6 +1335,7 @@ document.addEventListener("movea:catalogo", event => {
 
     saveCart();
     renderCart();
+    showPrepaidPrices();
 
 });
 
@@ -986,3 +1346,4 @@ document.addEventListener("movea:catalogo", event => {
 
 syncCartWithPage();
 renderCart();
+showPrepaidPrices();

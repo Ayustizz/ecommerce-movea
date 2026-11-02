@@ -3,20 +3,24 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/ https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/; style-src 'self' https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/ https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/ https://fonts.googleapis.com; font-src https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/ https://fonts.gstatic.com; img-src 'self' data: https://bynttfvlwyplfovklzxa.supabase.co; connect-src 'self' https://bynttfvlwyplfovklzxa.supabase.co; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
+
+    <link rel="icon" href="../img/favicon.svg" type="image/svg+xml">
 
     <title>Movea | Administración</title>
 
     <!-- Bootstrap -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous" rel="stylesheet">
 
     <!-- Estilos de Movea -->
     <link rel="stylesheet" href="../styles/styles.css">
     <link rel="stylesheet" href="../styles/admin.css">
 
     <!-- Iconos -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha384-t1nt8BQoYMLFN5p42tRAtuAAFQaCQODekUVeKKZrEnEyp4H2R0RHFz0KWpmj7i8g" crossorigin="anonymous">
 </head>
 
 <body>
@@ -138,6 +142,16 @@
                     Ventas
                 </button>
 
+                <button
+                    type="button"
+                    id="tab-accounts"
+                    class="admin-tab"
+                    role="tab"
+                    aria-selected="false"
+                    aria-controls="view-accounts">
+                    Cuentas
+                </button>
+
             </div>
 
             <p id="admin-message" class="admin-error" role="alert" hidden></p>
@@ -205,6 +219,42 @@
                             <small>Con 0 se muestra "Consultar precio".</small>
 
                         </div>
+
+                    </div>
+
+                    <div class="checkout-field">
+
+                        <label for="product-cost">Costo por unidad</label>
+
+                        <input type="number" id="product-cost" min="0" step="1" inputmode="numeric">
+
+                        <small>Lo que te cuesta cada unidad. Es privado: no se muestra en la tienda.</small>
+
+                    </div>
+
+                    <fieldset class="admin-sizes">
+
+                        <legend>Talles disponibles</legend>
+
+                        <div class="admin-form__checks">
+                            <label><input type="checkbox" name="productSize" value="XS"> XS</label>
+                            <label><input type="checkbox" name="productSize" value="S"> S</label>
+                            <label><input type="checkbox" name="productSize" value="M"> M</label>
+                            <label><input type="checkbox" name="productSize" value="L"> L</label>
+                            <label><input type="checkbox" name="productSize" value="XL"> XL</label>
+                            <label><input type="checkbox" name="productSize" value="XXL"> XXL</label>
+                            <label><input type="checkbox" name="productSize" value="Único"> Único</label>
+                        </div>
+
+                    </fieldset>
+
+                    <div class="checkout-field">
+
+                        <label for="product-colors">Colores disponibles</label>
+
+                        <input type="text" id="product-colors" maxlength="200" placeholder="Ej.: Negro, Blanco, Marrón">
+
+                        <small>Separados por coma. Si hay uno solo, se elige automáticamente.</small>
 
                     </div>
 
@@ -303,6 +353,143 @@
 
             </section>
 
+
+            <!-- CUENTAS -->
+
+            <section id="view-accounts" role="tabpanel" aria-labelledby="tab-accounts" hidden>
+
+                <div class="admin-toolbar">
+
+                    <div class="checkout-field admin-toolbar__filter">
+
+                        <label for="accounts-month">Mes</label>
+
+                        <input type="month" id="accounts-month" required>
+
+                    </div>
+
+                    <p class="product-filter__count">Solo cuenta pedidos pagados o entregados.</p>
+
+                </div>
+
+                <div class="admin-stats admin-stats--accounts">
+
+                    <div class="admin-stat">
+                        <span>Ingresos</span>
+                        <strong id="account-income">$0</strong>
+                    </div>
+
+                    <div class="admin-stat">
+                        <span>Costo de lo vendido</span>
+                        <strong id="account-cost">$0</strong>
+                    </div>
+
+                    <div class="admin-stat">
+                        <span>Gastos</span>
+                        <strong id="account-expenses">$0</strong>
+                    </div>
+
+                    <div class="admin-stat" id="account-profit-card">
+                        <span>Ganancia neta</span>
+                        <strong id="account-profit">$0</strong>
+                        <small id="account-margin"></small>
+                    </div>
+
+                </div>
+
+                <p id="account-warning" class="cart-pending admin-warning" hidden></p>
+
+
+                <!-- Por producto -->
+
+                <h2 class="admin-section-title">Por producto</h2>
+
+                <div class="admin-table-wrap">
+
+                    <table class="admin-table">
+
+                        <thead>
+                            <tr>
+                                <th scope="col">Producto</th>
+                                <th scope="col">Unidades</th>
+                                <th scope="col">Ingresos</th>
+                                <th scope="col">Costo</th>
+                                <th scope="col">Ganancia</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="account-products"></tbody>
+
+                    </table>
+
+                </div>
+
+
+                <!-- Gastos -->
+
+                <h2 class="admin-section-title">Gastos del negocio</h2>
+
+                <form id="expense-form" class="admin-card admin-form">
+
+                    <div class="admin-form__row">
+
+                        <div class="checkout-field">
+
+                            <label for="expense-concept">Concepto *</label>
+
+                            <input type="text" id="expense-concept" minlength="2" maxlength="120" placeholder="Ej.: Publicidad en Instagram" required>
+
+                        </div>
+
+                        <div class="checkout-field">
+
+                            <label for="expense-category">Categoría *</label>
+
+                            <select id="expense-category" required>
+                                <option value="envios">Envíos</option>
+                                <option value="publicidad">Publicidad</option>
+                                <option value="packaging">Packaging</option>
+                                <option value="comisiones">Comisiones</option>
+                                <option value="otros">Otros</option>
+                            </select>
+
+                        </div>
+
+                        <div class="checkout-field">
+
+                            <label for="expense-amount">Importe en pesos *</label>
+
+                            <input type="number" id="expense-amount" min="1" step="1" inputmode="numeric" required>
+
+                        </div>
+
+                        <div class="checkout-field">
+
+                            <label for="expense-date">Fecha *</label>
+
+                            <input type="date" id="expense-date" required>
+
+                        </div>
+
+                    </div>
+
+                    <small class="admin-form__note">
+                        No cargues acá la compra de mercadería: ya se cuenta con el
+                        costo por unidad de cada producto vendido.
+                    </small>
+
+                    <p id="expense-error" class="admin-error" role="alert" hidden></p>
+
+                    <button type="submit" id="expense-save" class="admin-button">
+                        Agregar gasto
+                    </button>
+
+                </form>
+
+                <div id="expenses-list" class="admin-list" aria-live="polite"></div>
+
+            </section>
+
         </section>
 
     </main>
@@ -312,7 +499,7 @@
          SCRIPTS
     ========================== -->
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
 
     <script src="../scripts/supabase-config.js"></script>
     <script src="../scripts/admin.js"></script>

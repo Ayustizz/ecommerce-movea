@@ -30,6 +30,8 @@
         card.dataset.id = product.id;
         card.dataset.name = product.name;
         card.dataset.price = product.price;
+        card.dataset.sizes = product.sizes.join("|");
+        card.dataset.colors = product.colors.join("|");
 
         const figure = document.createElement("figure");
         const image = document.createElement("img");
@@ -77,7 +79,7 @@
         try {
 
             const response = await fetch(
-                `${config.url}/rest/v1/products?select=id,name,description,category,price,image_url,featured&order=sort_order.asc,created_at.asc`,
+                `${config.url}/rest/v1/products?select=id,name,description,category,price,image_url,featured,sizes,colors&order=sort_order.asc,created_at.asc`,
                 { headers: { apikey: config.anonKey } }
             );
 
@@ -111,6 +113,8 @@
 
     }
 
-    loadCatalog();
+    // Espera a que el carrito y los filtros estén listos.
+
+    document.addEventListener("DOMContentLoaded", loadCatalog);
 
 })();

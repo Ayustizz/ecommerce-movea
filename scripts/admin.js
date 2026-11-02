@@ -3,6 +3,17 @@
 // Ocultar pantallas acá es solo comodidad:
 // la seguridad real está en los permisos de supabase/schema.sql.
 
+// El panel nunca se muestra dentro de otra página.
+
+if (window.top !== window.self) {
+
+    document.body.replaceChildren();
+
+    throw new Error("Panel bloqueado dentro de un marco");
+
+}
+
+
 // ==========================================
 // 1. CONFIGURACIÓN
 // ==========================================
@@ -25,6 +36,14 @@ const PAYMENT_NAMES = {
     "mercado-pago": "Mercado Pago",
     transferencia: "Transferencia bancaria",
     entrega: "Efectivo al recibir"
+};
+
+const EXPENSE_CATEGORY_NAMES = {
+    envios: "Envíos",
+    publicidad: "Publicidad",
+    packaging: "Packaging",
+    comisiones: "Comisiones",
+    otros: "Otros"
 };
 
 const CATEGORY_NAMES = {
@@ -53,8 +72,10 @@ const loginSubmit = document.getElementById("login-submit");
 
 const tabProducts = document.getElementById("tab-products");
 const tabOrders = document.getElementById("tab-orders");
+const tabAccounts = document.getElementById("tab-accounts");
 const viewProducts = document.getElementById("view-products");
 const viewOrders = document.getElementById("view-orders");
+const viewAccounts = document.getElementById("view-accounts");
 
 const productNew = document.getElementById("product-new");
 const productForm = document.getElementById("product-form");
@@ -64,6 +85,9 @@ const productName = document.getElementById("product-name");
 const productDescription = document.getElementById("product-description");
 const productCategory = document.getElementById("product-category");
 const productPrice = document.getElementById("product-price");
+const productCost = document.getElementById("product-cost");
+const productColors = document.getElementById("product-colors");
+const productSizes = document.querySelectorAll('input[name="productSize"]');
 const productImage = document.getElementById("product-image");
 const productImagePreview = document.getElementById("product-image-preview");
 const productActive = document.getElementById("product-active");
@@ -80,6 +104,25 @@ const statMonth = document.getElementById("stat-month");
 const statPending = document.getElementById("stat-pending");
 const statCount = document.getElementById("stat-count");
 
+const accountsMonth = document.getElementById("accounts-month");
+const accountIncome = document.getElementById("account-income");
+const accountCost = document.getElementById("account-cost");
+const accountExpenses = document.getElementById("account-expenses");
+const accountProfit = document.getElementById("account-profit");
+const accountProfitCard = document.getElementById("account-profit-card");
+const accountMargin = document.getElementById("account-margin");
+const accountWarning = document.getElementById("account-warning");
+const accountProducts = document.getElementById("account-products");
+
+const expenseForm = document.getElementById("expense-form");
+const expenseConcept = document.getElementById("expense-concept");
+const expenseCategory = document.getElementById("expense-category");
+const expenseAmount = document.getElementById("expense-amount");
+const expenseDate = document.getElementById("expense-date");
+const expenseError = document.getElementById("expense-error");
+const expenseSave = document.getElementById("expense-save");
+const expensesList = document.getElementById("expenses-list");
+
 
 // ==========================================
 // 3. ESTADO
@@ -92,6 +135,7 @@ const client = config && config.url && config.anonKey
     : null;
 
 let products = [];
+let productCosts = new Map();
 let orders = [];
 let editingProduct = null;
 
@@ -163,6 +207,36 @@ function createProductId(name) {
         .replace(/^-|-$/g, "");
 
     return `${slug || "producto"}-${Date.now().toString(36)}`;
+
+}
+
+function parseColors(value) {
+
+    const colors = value
+        .split(",")
+        .map(color => color.trim().replace(/\|/g, ""))
+        .filter(Boolean);
+
+    return [...new Set(colors)];
+
+}
+
+function getPhoneChatUrl(phone) {
+
+    const digits = phone.replace(/\D/g, "").replace(/^0/, "");
+
+    return `https://wa.me/${digits.startsWith("54") ? digits : `549${digits}`}`;
+
+}
+
+function getVariantText(item) {
+
+    const variant = [
+        item.size && `Talle ${item.size}`,
+        item.color
+    ].filter(Boolean).join(", ");
+
+    return variant ? ` (${variant})` : "";
 
 }
 
@@ -257,10 +331,15 @@ adminLogout.addEventListener("click", async () => {
     await client.auth.signOut();
 
     products = [];
+    productCosts = new Map();
     orders = [];
 
     productsList.replaceChildren();
     ordersList.replaceChildren();
+    accountProducts.replaceChildren();
+    expensesList.replaceChildren();
+
+    selectTab(tabProducts);
 
     closeProductForm();
 
@@ -275,21 +354,28 @@ adminLogout.addEventListener("click", async () => {
 
 function selectTab(tab) {
 
-    const isProducts = tab === tabProducts;
+    [
+        [tabProducts, viewProducts],
+        [tabOrders, viewOrders],
+        [tabAccounts, viewAccounts]
+    ].forEach(([item, view]) => {
 
-    tabProducts.classList.toggle("active", isProducts);
-    tabOrders.classList.toggle("active", !isProducts);
+        item.classList.toggle("active", item === tab);
+        item.setAttribute("aria-selected", String(item === tab));
 
-    tabProducts.setAttribute("aria-selected", String(isProducts));
-    tabOrders.setAttribute("aria-selected", String(!isProducts));
+        view.hidden = item !== tab;
 
-    viewProducts.hidden = !isProducts;
-    viewOrders.hidden = isProducts;
+    });
+
+    if (tab === tabAccounts) {
+        loadAccounts();
+    }
 
 }
 
 tabProducts.addEventListener("click", () => selectTab(tabProducts));
 tabOrders.addEventListener("click", () => selectTab(tabOrders));
+tabAccounts.addEventListener("click", () => selectTab(tabAccounts));
 
 
 // ==========================================
@@ -316,7 +402,43 @@ async function loadProducts() {
 
     products = data;
 
+    await loadProductCosts();
+
     renderProducts();
+
+}
+
+async function loadProductCosts() {
+
+    const { data, error } = await client
+        .from("product_costs")
+        .select("product_id, cost");
+
+    if (error) {
+
+        console.error("Error al cargar costos:", error);
+
+        showError(adminMessage, "No se pudieron cargar los costos.");
+
+        return;
+
+    }
+
+    productCosts = new Map(data.map(item => [item.product_id, item.cost]));
+
+}
+
+function getCostText(product) {
+
+    const cost = productCosts.get(product.id);
+
+    if (cost === undefined) return "Sin costo cargado";
+
+    if (product.price === 0) return `Costo: ${formatPrice(cost)}`;
+
+    const margin = Math.round((product.price - cost) / product.price * 100);
+
+    return `Costo: ${formatPrice(cost)} · Margen: ${margin}%`;
 
 }
 
@@ -348,9 +470,16 @@ function createProductRow(product) {
         badges.append(createText("span", "Oculto", "admin-badge admin-badge--off"));
     }
 
+    const options = [
+        product.sizes.length > 0 && `Talles: ${product.sizes.join(", ")}`,
+        product.colors.length > 0 && `Colores: ${product.colors.join(", ")}`
+    ].filter(Boolean).join(" · ");
+
     info.append(
         createText("h2", product.name),
         createText("p", product.price > 0 ? formatPrice(product.price) : "Consultar precio", "admin-row__price"),
+        createText("p", options, "admin-row__options"),
+        createText("p", getCostText(product), "admin-row__options"),
         badges
     );
 
@@ -416,8 +545,14 @@ function openProductForm(product = null) {
         productDescription.value = product.description;
         productCategory.value = product.category;
         productPrice.value = product.price;
+        productCost.value = productCosts.get(product.id) ?? "";
         productActive.checked = product.active;
         productFeatured.checked = product.featured;
+        productColors.value = product.colors.join(", ");
+
+        productSizes.forEach(input => {
+            input.checked = product.sizes.includes(input.value);
+        });
 
     }
 
@@ -438,6 +573,19 @@ function closeProductForm() {
     editingProduct = null;
 
     productForm.hidden = true;
+
+}
+
+async function saveProductCost(productId) {
+
+    const { error } = productCost.value === ""
+        ? await client.from("product_costs").delete().eq("product_id", productId)
+        : await client.from("product_costs").upsert({
+            product_id: productId,
+            cost: Number(productCost.value)
+        });
+
+    if (error) throw error;
 
 }
 
@@ -523,21 +671,28 @@ productForm.addEventListener("submit", async event => {
             category: productCategory.value,
             price: Number(productPrice.value),
             active: productActive.checked,
-            featured: productFeatured.checked
+            featured: productFeatured.checked,
+            colors: parseColors(productColors.value),
+            sizes: Array.from(productSizes)
+                .filter(input => input.checked)
+                .map(input => input.value)
         };
 
         if (newImageUrl) {
             values.image_url = newImageUrl;
         }
 
+        const productId = editingProduct
+            ? editingProduct.id
+            : createProductId(values.name);
+
         const { error } = editingProduct
-            ? await client.from("products").update(values).eq("id", editingProduct.id)
-            : await client.from("products").insert({
-                ...values,
-                id: createProductId(values.name)
-            });
+            ? await client.from("products").update(values).eq("id", productId)
+            : await client.from("products").insert({ ...values, id: productId });
 
         if (error) throw error;
+
+        await saveProductCost(productId);
 
         if (newImageUrl && editingProduct) {
             await removeStoredImage(editingProduct.image_url);
@@ -719,6 +874,18 @@ function createOrderCard(order) {
         createText("p", `${formatDate(order.created_at)} · ${order.customer_name}`)
     );
 
+    if (order.customer_phone) {
+
+        const phone = createText("a", order.customer_phone, "admin-order__phone");
+
+        phone.href = getPhoneChatUrl(order.customer_phone);
+        phone.target = "_blank";
+        phone.rel = "noopener noreferrer";
+
+        heading.append(phone);
+
+    }
+
     const select = document.createElement("select");
 
     select.className = "admin-order__status";
@@ -746,7 +913,7 @@ function createOrderCard(order) {
             : "Precio a confirmar";
 
         items.append(
-            createText("li", `${item.quantity}x ${item.name} - ${price}`)
+            createText("li", `${item.quantity}x ${item.name}${getVariantText(item)} - ${price}`)
         );
 
     });
@@ -759,11 +926,19 @@ function createOrderCard(order) {
         createText("strong", formatPrice(order.total))
     );
 
-    card.append(
-        header,
-        items,
-        createText("p", order.details, "admin-order__details")
-    );
+    card.append(header, items);
+
+    if (order.details) {
+        card.append(createText("p", order.details, "admin-order__details"));
+    }
+
+    if (order.status === "pendiente" && order.payment_method !== "entrega") {
+
+        card.append(
+            createText("p", "Esperando comprobante de pago.", "cart-pending")
+        );
+
+    }
 
     if (order.has_pending_prices) {
 
@@ -804,7 +979,308 @@ ordersFilter.addEventListener("change", renderOrders);
 
 
 // ==========================================
-// 11. INICIALIZAR
+// 11. CUENTAS
+// ==========================================
+
+function getCurrentMonth() {
+
+    const now = new Date();
+
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+
+}
+
+function getToday() {
+
+    const now = new Date();
+
+    return `${getCurrentMonth()}-${String(now.getDate()).padStart(2, "0")}`;
+
+}
+
+function getMonthRange(month) {
+
+    const [year, monthNumber] = month.split("-").map(Number);
+
+    const end = new Date(year, monthNumber, 1);
+
+    return {
+        start: new Date(year, monthNumber - 1, 1),
+        end,
+        firstDay: `${month}-01`,
+        nextMonth: `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, "0")}-01`
+    };
+
+}
+
+function summarizeSales(sales) {
+
+    const summary = {
+        income: 0,
+        cost: 0,
+        itemsWithoutCost: 0,
+        byProduct: new Map()
+    };
+
+    sales.forEach(order => {
+
+        // El descuento se reparte entre los productos del pedido.
+
+        const paidShare = order.subtotal > 0
+            ? order.total / order.subtotal
+            : 1;
+
+        summary.income += order.total;
+
+        order.order_items.forEach(item => {
+
+            // Pedidos anteriores a cargar costos: se usa el costo actual.
+
+            const unitCost = item.unit_cost ?? productCosts.get(item.product_id);
+
+            const row = summary.byProduct.get(item.name) || {
+                name: item.name,
+                units: 0,
+                income: 0,
+                cost: 0
+            };
+
+            row.units += item.quantity;
+            row.income += item.unit_price * item.quantity * paidShare;
+
+            if (unitCost === undefined) {
+
+                summary.itemsWithoutCost += item.quantity;
+
+            } else {
+
+                row.cost += unitCost * item.quantity;
+                summary.cost += unitCost * item.quantity;
+
+            }
+
+            summary.byProduct.set(item.name, row);
+
+        });
+
+    });
+
+    return summary;
+
+}
+
+function createProductAccountRow(row) {
+
+    const tableRow = document.createElement("tr");
+
+    tableRow.append(
+        createText("th", row.name),
+        createText("td", row.units),
+        createText("td", formatPrice(Math.round(row.income))),
+        createText("td", formatPrice(row.cost)),
+        createText("td", formatPrice(Math.round(row.income - row.cost)))
+    );
+
+    tableRow.firstChild.scope = "row";
+
+    return tableRow;
+
+}
+
+function createExpenseRow(expense) {
+
+    const row = document.createElement("article");
+    row.className = "admin-expense";
+
+    const info = document.createElement("div");
+
+    const date = new Date(`${expense.spent_on}T12:00:00`);
+
+    info.append(
+        createText("h3", expense.concept),
+        createText("p", `${date.toLocaleDateString("es-AR")} · ${EXPENSE_CATEGORY_NAMES[expense.category]}`)
+    );
+
+    const deleteButton = createButton("Eliminar", "admin-link admin-link--danger", () => {
+
+        if (deleteButton.dataset.confirm) {
+
+            deleteExpense(expense);
+
+            return;
+
+        }
+
+        deleteButton.dataset.confirm = "true";
+        deleteButton.textContent = "¿Confirmar?";
+
+    });
+
+    row.append(
+        info,
+        createText("strong", formatPrice(expense.amount)),
+        deleteButton
+    );
+
+    return row;
+
+}
+
+function renderAccounts(summary, expenses) {
+
+    const expensesTotal = expenses.reduce((total, expense) => {
+        return total + expense.amount;
+    }, 0);
+
+    const profit = summary.income - summary.cost - expensesTotal;
+
+    accountIncome.textContent = formatPrice(summary.income);
+    accountCost.textContent = formatPrice(summary.cost);
+    accountExpenses.textContent = formatPrice(expensesTotal);
+    accountProfit.textContent = formatPrice(profit);
+
+    accountProfitCard.classList.toggle("admin-stat--loss", profit < 0);
+
+    accountMargin.textContent = summary.income > 0
+        ? `${Math.round(profit / summary.income * 100)}% de los ingresos`
+        : "";
+
+    accountWarning.textContent =
+        `${summary.itemsWithoutCost} ${summary.itemsWithoutCost === 1 ? "unidad vendida no tiene" : "unidades vendidas no tienen"} costo cargado: la ganancia real es menor a la que se muestra.`;
+
+    accountWarning.hidden = summary.itemsWithoutCost === 0;
+
+    const rows = [...summary.byProduct.values()]
+        .sort((a, b) => (b.income - b.cost) - (a.income - a.cost));
+
+    accountProducts.replaceChildren(...rows.map(createProductAccountRow));
+
+    if (rows.length === 0) {
+
+        const emptyRow = document.createElement("tr");
+        const emptyCell = createText("td", "No hay ventas cobradas en este mes.");
+
+        emptyCell.colSpan = 5;
+
+        emptyRow.append(emptyCell);
+        accountProducts.append(emptyRow);
+
+    }
+
+    expensesList.replaceChildren(...expenses.map(createExpenseRow));
+
+    if (expenses.length === 0) {
+        expensesList.append(createText("p", "No hay gastos en este mes.", "product-filter__empty"));
+    }
+
+}
+
+async function loadAccounts() {
+
+    const month = accountsMonth.value;
+
+    if (!month) return;
+
+    showError(adminMessage, "");
+
+    const range = getMonthRange(month);
+
+    const [sales, expenses] = await Promise.all([
+        client
+            .from("orders")
+            .select("subtotal, total, order_items(product_id, name, unit_price, unit_cost, quantity)")
+            .in("status", ["pagado", "entregado"])
+            .gte("created_at", range.start.toISOString())
+            .lt("created_at", range.end.toISOString()),
+        client
+            .from("expenses")
+            .select("*")
+            .gte("spent_on", range.firstDay)
+            .lt("spent_on", range.nextMonth)
+            .order("spent_on", { ascending: false })
+    ]);
+
+    // Si cambió el mes mientras cargaba, vale la consulta nueva.
+
+    if (accountsMonth.value !== month) return;
+
+    if (sales.error || expenses.error) {
+
+        console.error("Error al cargar cuentas:", sales.error || expenses.error);
+
+        showError(adminMessage, "No se pudieron cargar las cuentas.");
+
+        return;
+
+    }
+
+    renderAccounts(summarizeSales(sales.data), expenses.data);
+
+}
+
+async function deleteExpense(expense) {
+
+    const { error } = await client
+        .from("expenses")
+        .delete()
+        .eq("id", expense.id);
+
+    if (error) {
+
+        console.error("Error al eliminar el gasto:", error);
+
+        showError(adminMessage, "No se pudo eliminar el gasto.");
+
+        return;
+
+    }
+
+    await loadAccounts();
+
+}
+
+expenseForm.addEventListener("submit", async event => {
+
+    event.preventDefault();
+
+    showError(expenseError, "");
+
+    expenseSave.disabled = true;
+
+    const { error } = await client.from("expenses").insert({
+        concept: expenseConcept.value.trim(),
+        category: expenseCategory.value,
+        amount: Number(expenseAmount.value),
+        spent_on: expenseDate.value
+    });
+
+    expenseSave.disabled = false;
+
+    if (error) {
+
+        console.error("Error al guardar el gasto:", error);
+
+        showError(expenseError, "No se pudo guardar el gasto. Probá de nuevo.");
+
+        return;
+
+    }
+
+    expenseConcept.value = "";
+    expenseAmount.value = "";
+
+    await loadAccounts();
+
+});
+
+accountsMonth.addEventListener("change", loadAccounts);
+
+accountsMonth.value = getCurrentMonth();
+expenseDate.value = getToday();
+
+
+// ==========================================
+// 12. INICIALIZAR
 // ==========================================
 
 async function init() {

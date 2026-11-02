@@ -9,6 +9,39 @@ document.querySelectorAll("[data-product-list]").forEach((list) => {
         .replace(/[\u0300-\u036f]/g, "")
         .toLocaleLowerCase("es");
 
+    // Botones de categoría a partir de las opciones del select
+
+    const chips = document.createElement("div");
+
+    chips.className = "product-chips";
+    chips.setAttribute("role", "group");
+    chips.setAttribute("aria-label", "Filtrar por categoría");
+
+    const updateChips = () => {
+        chips.querySelectorAll("button").forEach((chip) => {
+            chip.setAttribute("aria-pressed", String(chip.dataset.value === categorySelect.value));
+        });
+    };
+
+    Array.from(categorySelect.options).forEach((option) => {
+        const chip = document.createElement("button");
+
+        chip.type = "button";
+        chip.dataset.value = option.value;
+        chip.textContent = option.value ? option.textContent : "Todo";
+
+        chip.addEventListener("click", () => {
+            categorySelect.value = option.value;
+            categorySelect.dispatchEvent(new Event("change"));
+        });
+
+        chips.appendChild(chip);
+    });
+
+    categorySelect.closest("label").after(chips);
+    categorySelect.addEventListener("change", updateChips);
+    updateChips();
+
     const filterProducts = () => {
         const searchTerm = normalize(searchInput.value.trim());
         const category = categorySelect.value;

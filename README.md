@@ -19,4 +19,10 @@ Para activarlo:
 5. En SQL Editor, darle permisos: insert into public.admins (user_id) select id from auth.users where email = 'EMAIL_DEL_ADMIN';
 6. Copiar la URL del proyecto y la clave pública (anon o publishable) en scripts/supabase-config.js.
 
+Si la base ya existía, ejecutar una sola vez y en orden las migraciones que falten: supabase/migracion-talles-y-colores.sql, supabase/migracion-cuentas.sql y supabase/migracion-seguridad.sql. En una base nueva alcanza con schema.sql.
+
+Seguridad: cada página tiene una política de contenido (Content-Security-Policy) que nombra el proyecto de Supabase. Si cambia el proyecto, hay que actualizar esa dirección en las seis páginas. Si se actualiza Bootstrap, Font Awesome o Supabase, hay que recalcular los valores integrity.
+
+Cuentas del panel: los costos y gastos son privados. Las ganancias se calculan con pedidos pagados o entregados, usando el costo que tenía cada producto al venderse.
+
 Con Supabase activo, los precios se cambian en el panel. Los productos escritos en index.html y Pages/productos.html quedan como respaldo si Supabase no responde.
