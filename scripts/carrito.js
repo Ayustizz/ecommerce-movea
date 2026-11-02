@@ -13,7 +13,8 @@ const STORAGE_KEY = "movea-cart-v1";
 // el link y el alias definitivos de Movea.
 
 const PAYMENT_CONFIG = {
-    mercadoPagoLink: "https://link.mercadopago.com.ar/TU_NEGOCI",
+    // Si queda vacío, el link se envía por WhatsApp.
+    mercadoPagoLink: "",
     alias: "Martuu.rocio",
     discount: 15
 };
@@ -626,21 +627,36 @@ function renderPaymentInfo() {
         description.textContent =
             "Tenés un 15% de descuento por pagar antes de la entrega.";
 
-        const link = document.createElement("a");
+        paymentInfo.append(title, description);
 
-        link.href = PAYMENT_CONFIG.mercadoPagoLink;
-        link.target = "_blank";
-        link.rel = "noopener noreferrer";
-        link.textContent = "Abrir link de Mercado Pago";
+        if (PAYMENT_CONFIG.mercadoPagoLink) {
 
-        paymentInfo.append(title, description, link);
+            const link = document.createElement("a");
+
+            link.href = PAYMENT_CONFIG.mercadoPagoLink;
+            link.target = "_blank";
+            link.rel = "noopener noreferrer";
+            link.textContent = "Abrir link de Mercado Pago";
+
+            paymentInfo.append(link);
+
+        } else {
+
+            const linkNote = document.createElement("p");
+
+            linkNote.textContent =
+                "Te enviaremos el link de pago por WhatsApp.";
+
+            paymentInfo.append(linkNote);
+
+        }
 
     } else if (paymentMethod === "transferencia") {
 
         title.textContent = "Pago mediante transferencia";
 
         description.textContent =
-            `Alias de transferencia: ${PAYMENT_CONFIG.alias}`;
+            "Transferí el importe final a este alias:";
 
         const alias = document.createElement("strong");
 
@@ -678,7 +694,7 @@ checkoutForm.addEventListener("change", event => {
 // 19. GENERAR MENSAJE DE WHATSAPP
 // ==========================================
 
-function generateWhatsAppMessage() {
+function generateWhatsAppMessage(orderCode) {
 
     const name = customerName.value.trim();
     const details = customerDetails.value.trim();
@@ -696,6 +712,10 @@ function generateWhatsAppMessage() {
     let message = "";
 
     message += "¡Hola Movea! Quiero realizar el siguiente pedido.\n\n";
+
+    if (orderCode) {
+        message += `Pedido: ${orderCode}\n\n`;
+    }
 
     message += "DATOS DEL CLIENTE\n";
     message += `Nombre: ${name}\n\n`;
@@ -757,8 +777,9 @@ function generateWhatsAppMessage() {
 
     if (paymentMethod === "mercado-pago") {
 
-        message +=
-            `Link de pago: ${PAYMENT_CONFIG.mercadoPagoLink}\n`;
+        message += PAYMENT_CONFIG.mercadoPagoLink
+            ? `Link de pago: ${PAYMENT_CONFIG.mercadoPagoLink}\n`
+            : "Espero el link de pago por WhatsApp.\n";
 
         message +=
             "El pago queda pendiente de verificación por Movea.\n";
@@ -786,7 +807,78 @@ function generateWhatsAppMessage() {
 
 
 // ==========================================
-// 20. ENVIAR PEDIDO
+// 20. GUARDAR PEDIDO EN EL PANEL
+// ==========================================
+
+function isOrderSavingEnabled() {
+
+    const config = window.MOVEA_SUPABASE;
+
+    return Boolean(config && config.url && config.anonKey);
+
+}
+
+
+function createOrderCode() {
+
+    // Sin letras ni números que se confundan (O, 0, I, 1).
+
+    const characters = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+    const values = crypto.getRandomValues(new Uint8Array(8));
+
+    return Array.from(values, value => {
+        return characters[value % characters.length];
+    }).join("");
+
+}
+
+
+// No se espera la respuesta: el navegador bloquea
+// abrir WhatsApp si no es inmediato al clic.
+
+async function saveOrder(orderCode, paymentMethod) {
+
+    const config = window.MOVEA_SUPABASE;
+
+    try {
+
+        const response = await fetch(
+            `${config.url}/rest/v1/rpc/create_order`,
+            {
+                method: "POST",
+                keepalive: true,
+                headers: {
+                    apikey: config.anonKey,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    p_code: orderCode,
+                    p_customer_name: customerName.value.trim(),
+                    p_details: customerDetails.value.trim(),
+                    p_payment_method: paymentMethod,
+                    p_items: cart.map(product => {
+                        return { id: product.id, quantity: product.quantity };
+                    })
+                })
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error(`Respuesta ${response.status}`);
+        }
+
+    } catch (error) {
+
+        console.error("No se pudo guardar el pedido:", error);
+
+    }
+
+}
+
+
+// ==========================================
+// 21. ENVIAR PEDIDO
 // ==========================================
 
 checkoutForm.addEventListener("submit", event => {
@@ -817,7 +909,13 @@ checkoutForm.addEventListener("submit", event => {
 
     }
 
-    const message = generateWhatsAppMessage();
+    const orderCode = isOrderSavingEnabled() ? createOrderCode() : "";
+
+    if (orderCode) {
+        saveOrder(orderCode, paymentMethod);
+    }
+
+    const message = generateWhatsAppMessage(orderCode);
 
     const whatsappURL =
         `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
@@ -832,7 +930,59 @@ checkoutForm.addEventListener("submit", event => {
 
 
 // ==========================================
-// 21. INICIALIZAR
+// 22. ACTUALIZAR PRODUCTOS GUARDADOS
 // ==========================================
 
+// El carrito guardado puede tener precios viejos:
+// los datos de la página son los que valen.
+
+function syncCartWithPage() {
+
+    document.querySelectorAll(".product_card[data-id]").forEach(card => {
+
+        const product = cart.find(item => {
+            return item.id === card.dataset.id;
+        });
+
+        if (!product) return;
+
+        product.name = card.dataset.name;
+        product.price = Number(card.dataset.price);
+
+    });
+
+    saveCart();
+
+}
+
+
+// Con el catálogo del panel también se quitan
+// los productos que ya no están a la venta.
+
+document.addEventListener("movea:catalogo", event => {
+
+    const catalog = new Map(
+        event.detail.map(product => [product.id, product])
+    );
+
+    cart = cart.filter(product => catalog.has(product.id));
+
+    cart.forEach(product => {
+
+        product.name = catalog.get(product.id).name;
+        product.price = catalog.get(product.id).price;
+
+    });
+
+    saveCart();
+    renderCart();
+
+});
+
+
+// ==========================================
+// 23. INICIALIZAR
+// ==========================================
+
+syncCartWithPage();
 renderCart();

@@ -3,7 +3,6 @@ document.querySelectorAll("[data-product-list]").forEach((list) => {
     const categorySelect = list.querySelector("[data-product-category]");
     const count = list.querySelector("[data-product-count]");
     const emptyMessage = list.querySelector("[data-product-empty]");
-    const cards = Array.from(list.querySelectorAll(".product_card"));
 
     const normalize = (value) => value
         .normalize("NFD")
@@ -15,7 +14,7 @@ document.querySelectorAll("[data-product-list]").forEach((list) => {
         const category = categorySelect.value;
         let visibleCount = 0;
 
-        cards.forEach((card) => {
+        list.querySelectorAll(".product_card").forEach((card) => {
             const matchesSearch = normalize(card.textContent).includes(searchTerm);
             const matchesCategory = !category || card.dataset.category === category;
             const isVisible = matchesSearch && matchesCategory;
@@ -30,5 +29,6 @@ document.querySelectorAll("[data-product-list]").forEach((list) => {
 
     searchInput.addEventListener("input", filterProducts);
     categorySelect.addEventListener("change", filterProducts);
+    document.addEventListener("movea:catalogo", filterProducts);
     filterProducts();
 });

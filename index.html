@@ -183,6 +183,7 @@
         <section
             class="product-container"
             data-product-list
+            data-catalog="featured"
             aria-labelledby="productos-destacados">
 
             <h2 id="productos-destacados">Productos destacados</h2>
@@ -307,16 +308,16 @@
                 class="product_card"
                 data-category="joggers"
                 data-id="joggin-negro"
-                data-name="Joggin negro"
+                data-name="Jogging negro"
                 data-price="17000">
 
                 <figure>
                     <img
                         src="./img/Img_portadas/joggin-negro.png"
-                        alt="Joggin deportivo negro">
+                        alt="Jogging deportivo negro">
                 </figure>
 
-                <h2>Joggin negro</h2>
+                <h2>Jogging negro</h2>
 
                 <p>
                     Jogging deportivo femenino, cómodo y flexible,
@@ -344,7 +345,7 @@
                 data-category="tops"
                 data-id="top-marron"
                 data-name="Top marrón"
-                data-price="0">
+                data-price="30000">
 
                 <figure>
                     <img
@@ -361,7 +362,7 @@
 
                 <div class="product-card__footer">
 
-                    <p class="product-card__price">Consultar precio</p>
+                    <p class="product-card__price">$30.000</p>
 
                     <button type="button" class="product-card__order">
                         <i class="fa-solid fa-cart-plus" aria-hidden="true"></i>
@@ -380,7 +381,7 @@
                 data-category="shorts"
                 data-id="short-rojo"
                 data-name="Short rojo"
-                data-price="0">
+                data-price="50000">
 
                 <figure>
                     <img
@@ -397,7 +398,7 @@
 
                 <div class="product-card__footer">
 
-                    <p class="product-card__price">Consultar precio</p>
+                    <p class="product-card__price">$50.000</p>
 
                     <button type="button" class="product-card__order">
                         <i class="fa-solid fa-cart-plus" aria-hidden="true"></i>
@@ -416,7 +417,7 @@
                 data-category="shorts"
                 data-id="short-negro-azul"
                 data-name="Short negro y azul"
-                data-price="0">
+                data-price="20000">
 
                 <figure>
                     <img
@@ -433,7 +434,24 @@
 
                 <div class="product-card__footer">
 
-                    <p class="product-card__price">Consultar precio</p>
+                    <p class="product-card__price">">
+
+                <figure>
+                    <img
+                        src="./img/Img_portadas/Shorts_negro_y_azul.jpeg"
+                        alt="Short deportivo negro y azul">
+                </figure>
+
+                <h2>Short negro y azul</h2>
+
+                <p>
+                    Short deportivo versátil, pensado para
+                    acompañarte en tus actividades y entrenamientos.
+                </p>
+
+                <div class="product-card__footer">
+
+                    <p class="product-card__price">0.000</p>
 
                     <button type="button" class="product-card__order">
                         <i class="fa-solid fa-cart-plus" aria-hidden="true"></i>
@@ -452,7 +470,7 @@
                 data-category="shorts"
                 data-id="short-azul-marron"
                 data-name="Short azul claro y marrón"
-                data-price="0">
+                data-price="30000">
 
                 <figure>
                     <img
@@ -469,7 +487,7 @@
 
                 <div class="product-card__footer">
 
-                    <p class="product-card__price">Consultar precio</p>
+                    <p class="product-card__price">$30.000</p>
 
                     <button type="button" class="product-card__order">
                         <i class="fa-solid fa-cart-plus" aria-hidden="true"></i>
@@ -804,7 +822,7 @@
                 </a>
 
                 <a
-                    href="https://www.instagram.com/movea_fit/"
+                    href="https://www.instagram.com/moveafitt/"
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label="Movea en Instagram">
@@ -845,8 +863,6 @@
 
                 <li><a href="./index.html">Inicio</a></li>
 
-                <li><a href="./cambios">Cambios</a></li>
-
                 <li><a href="./Pages/contacto.html">Contacto</a></li>
 
             </ul>
@@ -880,6 +896,10 @@
     ========================== -->
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Productos del panel -->
+    <script src="./scripts/supabase-config.js"></script>
+    <script src="./scripts/catalogo.js"></script>
 
     <!-- Filtros existentes -->
     <script src="./scripts/product-filters.js"></script>

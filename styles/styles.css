@@ -1912,6 +1912,7 @@ body.cart-open {
 }
 
 .checkout-submit i {
+    color: inherit;
     font-size: 19px;
 }
 

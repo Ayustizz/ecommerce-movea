@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+
+    <title>Movea | Administración</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Estilos de Movea -->
+    <link rel="stylesheet" href="../styles/styles.css">
+    <link rel="stylesheet" href="../styles/admin.css">
+
+    <!-- Iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+
+<body>
+
+    <!-- =========================
+         HEADER
+    ========================== -->
+
+    <header class="site-header">
+
+        <nav class="navbar navbar-dark site-navbar">
+
+            <div class="container-fluid site-navbar-inner">
+
+                <a class="navbar-brand" href="../index.html">Movea</a>
+
+                <button type="button" id="admin-logout" class="admin-logout" hidden>
+                    <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>
+                    Cerrar sesión
+                </button>
+
+            </div>
+
+        </nav>
+
+    </header>
+
+
+    <!-- =========================
+         CONTENIDO PRINCIPAL
+    ========================== -->
+
+    <main>
+
+        <!-- SIN CONFIGURAR -->
+
+        <section id="admin-setup" class="admin-card admin-card--narrow" hidden>
+
+            <h1>Panel sin configurar</h1>
+
+            <p>
+                Completá los datos de Supabase en
+                scripts/supabase-config.js para usar el panel.
+            </p>
+
+        </section>
+
+
+        <!-- LOGIN -->
+
+        <section id="admin-login" class="admin-card admin-card--narrow" hidden>
+
+            <p class="contacto-etiqueta">Acceso privado</p>
+
+            <h1>Administración</h1>
+
+            <form id="login-form">
+
+                <div class="checkout-field">
+
+                    <label for="login-email">Email</label>
+
+                    <input
+                        type="email"
+                        id="login-email"
+                        autocomplete="username"
+                        required>
+
+                </div>
+
+                <div class="checkout-field">
+
+                    <label for="login-password">Contraseña</label>
+
+                    <input
+                        type="password"
+                        id="login-password"
+                        autocomplete="current-password"
+                        required>
+
+                </div>
+
+                <p id="login-error" class="admin-error" role="alert" hidden></p>
+
+                <button type="submit" id="login-submit" class="admin-button">
+                    Ingresar
+                </button>
+
+            </form>
+
+        </section>
+
+
+        <!-- PANEL -->
+
+        <section id="admin-panel" class="admin-panel" hidden>
+
+            <h1>Administración</h1>
+
+            <div class="admin-tabs" role="tablist" aria-label="Secciones del panel">
+
+                <button
+                    type="button"
+                    id="tab-products"
+                    class="admin-tab active"
+                    role="tab"
+                    aria-selected="true"
+                    aria-controls="view-products">
+                    Productos
+                </button>
+
+                <button
+                    type="button"
+                    id="tab-orders"
+                    class="admin-tab"
+                    role="tab"
+                    aria-selected="false"
+                    aria-controls="view-orders">
+                    Ventas
+                </button>
+
+            </div>
+
+            <p id="admin-message" class="admin-error" role="alert" hidden></p>
+
+
+            <!-- PRODUCTOS -->
+
+            <section id="view-products" role="tabpanel" aria-labelledby="tab-products">
+
+                <div class="admin-toolbar">
+
+                    <p id="products-count" class="product-filter__count" aria-live="polite"></p>
+
+                    <button type="button" id="product-new" class="admin-button admin-button--auto">
+                        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                        Nuevo producto
+                    </button>
+
+                </div>
+
+
+                <!-- Formulario -->
+
+                <form id="product-form" class="admin-card admin-form" hidden>
+
+                    <h2 id="product-form-title">Nuevo producto</h2>
+
+                    <div class="checkout-field">
+
+                        <label for="product-name">Nombre *</label>
+
+                        <input type="text" id="product-name" minlength="2" maxlength="80" required>
+
+                    </div>
+
+                    <div class="checkout-field">
+
+                        <label for="product-description">Descripción</label>
+
+                        <textarea id="product-description" rows="3" maxlength="500"></textarea>
+
+                    </div>
+
+                    <div class="admin-form__row">
+
+                        <div class="checkout-field">
+
+                            <label for="product-category">Categoría *</label>
+
+                            <select id="product-category" required>
+                                <option value="buzos">Buzos</option>
+                                <option value="joggers">Joggers</option>
+                                <option value="tops">Tops</option>
+                                <option value="shorts">Shorts</option>
+                            </select>
+
+                        </div>
+
+                        <div class="checkout-field">
+
+                            <label for="product-price">Precio en pesos *</label>
+
+                            <input type="number" id="product-price" min="0" step="1" inputmode="numeric" required>
+
+                            <small>Con 0 se muestra "Consultar precio".</small>
+
+                        </div>
+
+                    </div>
+
+                    <div class="checkout-field">
+
+                        <label for="product-image">Foto (JPG, PNG o WebP, hasta 5 MB)</label>
+
+                        <input type="file" id="product-image" accept="image/jpeg,image/png,image/webp">
+
+                        <img id="product-image-preview" class="admin-form__preview" alt="Foto actual del producto" hidden>
+
+                    </div>
+
+                    <div class="admin-form__checks">
+
+                        <label>
+                            <input type="checkbox" id="product-active" checked>
+                            Visible en la tienda
+                        </label>
+
+                        <label>
+                            <input type="checkbox" id="product-featured">
+                            Destacado en el inicio
+                        </label>
+
+                    </div>
+
+                    <p id="product-form-error" class="admin-error" role="alert" hidden></p>
+
+                    <div class="admin-form__actions">
+
+                        <button type="button" id="product-cancel" class="admin-button admin-button--soft">
+                            Cancelar
+                        </button>
+
+                        <button type="submit" id="product-save" class="admin-button">
+                            Guardar
+                        </button>
+
+                    </div>
+
+                </form>
+
+
+                <!-- Listado -->
+
+                <div id="products-list" class="admin-list" aria-live="polite"></div>
+
+            </section>
+
+
+            <!-- VENTAS -->
+
+            <section id="view-orders" role="tabpanel" aria-labelledby="tab-orders" hidden>
+
+                <div class="admin-stats">
+
+                    <div class="admin-stat">
+                        <span>Cobrado este mes</span>
+                        <strong id="stat-month">$0</strong>
+                    </div>
+
+                    <div class="admin-stat">
+                        <span>Pedidos pendientes</span>
+                        <strong id="stat-pending">0</strong>
+                    </div>
+
+                    <div class="admin-stat">
+                        <span>Ventas este mes</span>
+                        <strong id="stat-count">0</strong>
+                    </div>
+
+                </div>
+
+                <div class="admin-toolbar">
+
+                    <div class="checkout-field admin-toolbar__filter">
+
+                        <label for="orders-filter">Estado</label>
+
+                        <select id="orders-filter">
+                            <option value="">Todos</option>
+                            <option value="pendiente">Pendientes</option>
+                            <option value="pagado">Pagados</option>
+                            <option value="entregado">Entregados</option>
+                            <option value="cancelado">Cancelados</option>
+                        </select>
+
+                    </div>
+
+                    <p id="orders-count" class="product-filter__count" aria-live="polite"></p>
+
+                </div>
+
+                <div id="orders-list" class="admin-list" aria-live="polite"></div>
+
+            </section>
+
+        </section>
+
+    </main>
+
+
+    <!-- =========================
+         SCRIPTS
+    ========================== -->
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
+
+    <script src="../scripts/supabase-config.js"></script>
+    <script src="../scripts/admin.js"></script>
+
+</body>
+</html>
