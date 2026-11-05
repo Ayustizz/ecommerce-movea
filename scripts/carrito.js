@@ -24,7 +24,7 @@ const DELIVERY_NAMES = {
 const PAYMENT_CONFIG = {
     alias: "Martuu.rocio",
     // Nombre del titular de la cuenta, para que el cliente lo verifique antes de transferir.
-    accountHolder: "",
+    accountHolder: "link.mercadopago.com.ar/movea",
     // Descuento en % según el medio de pago. Tienen que coincidir con
     // create_order en supabase/migracion-descuentos.sql.
     discounts: {

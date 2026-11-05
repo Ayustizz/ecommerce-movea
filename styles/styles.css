@@ -3589,14 +3589,14 @@ main > .instagram-cta {
 }
 
 
-/* Contacto: horario */
+/* Contacto: horario y usuario de Instagram */
 
-.contacto-card > span.contacto-horario {
+.contacto-card > span.contacto-detalle {
     color: var(--movea-muted);
     font-size: 13px;
 }
 
-.contacto-card > span.contacto-horario[hidden] {
+.contacto-card > span.contacto-detalle[hidden] {
     display: none;
 }
 
