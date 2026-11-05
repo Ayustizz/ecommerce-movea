@@ -183,87 +183,6 @@
 
     }
 
-    // "Comprá por categoría" del inicio: una tarjeta por categoría principal
-    // que tenga productos, con la foto de uno de ellos.
-
-    function renderCategoryTiles(categories, products) {
-
-        const section = document.querySelector("[data-category-section]");
-
-        if (!section || !categories || !products) return;
-
-        const tiles = categories
-            .filter(category => !category.parent_slug)
-            .map(category => {
-
-                const slugs = [
-                    category.slug,
-                    ...categories
-                        .filter(item => item.parent_slug === category.slug)
-                        .map(item => item.slug)
-                ];
-
-                const items = products.filter(product => slugs.includes(product.category));
-
-                const withImage = items.find(product => product.image_url);
-
-                return { category, count: items.length, image: withImage && withImage.image_url };
-
-            })
-            .filter(tile => tile.count > 0)
-            .map(tile => {
-
-                const link = document.createElement("a");
-
-                link.classList.add("category-tile");
-                link.href = new URL(
-                    `Pages/productos.html?categoria=${encodeURIComponent(tile.category.slug)}`,
-                    siteRoot
-                ).href;
-
-                // La foto se muestra entera, como en las tarjetas de producto.
-
-                const picture = document.createElement("span");
-                picture.classList.add("category-tile__image");
-
-                if (tile.image) {
-
-                    const image = document.createElement("img");
-
-                    image.src = new URL(tile.image, siteRoot).href;
-                    image.alt = "";
-                    image.loading = "lazy";
-
-                    picture.append(image);
-
-                }
-
-                const text = document.createElement("span");
-                text.classList.add("category-tile__text");
-
-                const name = document.createElement("strong");
-                name.textContent = tile.category.name;
-
-                const count = document.createElement("span");
-                count.textContent = `${tile.count} ${tile.count === 1 ? "producto" : "productos"}`;
-
-                const arrow = document.createElement("i");
-                arrow.classList.add("fa-solid", "fa-arrow-right");
-                arrow.setAttribute("aria-hidden", "true");
-
-                text.append(name, count);
-                link.append(picture, text, arrow);
-
-                return link;
-
-            });
-
-        section.querySelector("[data-category-tiles]").replaceChildren(...tiles);
-        section.hidden = tiles.length === 0;
-
-    }
-
-
     // Si las categorías no cargan, quedan las escritas en el HTML.
 
     async function loadCategories() {
@@ -355,12 +274,9 @@
 
     // Espera a que el carrito y los filtros estén listos.
 
-    document.addEventListener("DOMContentLoaded", async () => {
-
-        const [categories, products] = await Promise.all([loadCategories(), loadCatalog()]);
-
-        renderCategoryTiles(categories, products);
-
+    document.addEventListener("DOMContentLoaded", () => {
+        loadCategories();
+        loadCatalog();
     });
 
 })();
