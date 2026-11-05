@@ -1,0 +1,15 @@
+# Claves locales de Supabase y Mercado Pago: nunca se suben
+supabase/.env
+supabase/.env.*
+.env
+.env.*
+
+# Archivos que crea la herramienta de Supabase
+supabase/.temp/
+supabase/.branches/
+
+# Sistema y editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/

@@ -329,19 +329,8 @@ create policy "admin borra fotos" on storage.objects
     using (bucket_id = 'product-images' and public.is_admin());
 
 
--- PRODUCTOS ACTUALES
-
-insert into public.products (id, name, description, category, price, sizes, colors, image_url, featured, sort_order) values
-    ('buzo-blanco', 'Buzo blanco', 'Buzo deportivo femenino, cómodo y versátil para acompañarte antes y después del entrenamiento.', 'buzos', 20000, '{S,M,L,XL}', '{"Blanco"}', 'img/Img_portadas/Buzo-blanco.png', true, 1),
-    ('buzo-marron', 'Buzo marrón', 'Buzo deportivo femenino, cómodo y versátil para acompañarte antes y después del entrenamiento.', 'buzos', 20000, '{S,M,L,XL}', '{"Marrón"}', 'img/Img_portadas/Buzo-marron.png', true, 2),
-    ('joggin-negro', 'Jogging negro', 'Jogging deportivo femenino, cómodo y flexible, diseñado para acompañarte en tus entrenamientos.', 'joggers', 17000, '{S,M,L,XL}', '{"Negro"}', 'img/Img_portadas/joggin-negro.png', true, 3),
-    ('top-marron', 'Top marrón', 'Top deportivo cómodo y ligero, ideal para entrenamientos y actividades de alto movimiento.', 'tops', 30000, '{S,M,L,XL}', '{"Marrón"}', 'img/Img_portadas/top-marron.png', true, 4),
-    ('short-rojo', 'Short rojo', 'Short deportivo liviano y cómodo para moverte con libertad durante tus entrenamientos.', 'shorts', 50000, '{S,M,L,XL}', '{"Rojo"}', 'img/Img_portadas/Shorts_rojo.jpeg', true, 5),
-    ('short-negro-azul', 'Short negro y azul', 'Short deportivo versátil, pensado para acompañarte en tus actividades y entrenamientos.', 'shorts', 20000, '{S,M,L,XL}', '{"Negro y azul"}', 'img/Img_portadas/Shorts_negro_y_azul.jpeg', true, 6),
-    ('short-azul-marron', 'Short azul claro y marrón', 'Short deportivo cómodo y práctico, con una combinación de colores ideal para tus días activos.', 'shorts', 30000, '{S,M,L,XL}', '{"Azul claro y marrón"}', 'img/Img_portadas/Shorts_azulclaro_y_marron.jpeg', true, 7);
-
-
 -- PRODUCTOS
+-- La tienda empieza vacía: los productos se cargan desde el panel.
 
 alter table public.products
     add column track_stock boolean not null default false,
@@ -671,3 +660,306 @@ create trigger orders_sync_stock
     after update of status on public.orders
     for each row
     execute function public.sync_order_stock();
+
+
+-- CATEGORÍAS Y SUBCATEGORÍAS
+
+create table public.categories (
+    slug text primary key check (slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$' and char_length(slug) <= 80),
+    name text not null check (char_length(name) between 2 and 60),
+    parent_slug text references public.categories (slug) on delete cascade,
+    sort_order integer not null default 100,
+    created_at timestamptz not null default now(),
+    check (parent_slug is distinct from slug)
+);
+
+alter table public.categories enable row level security;
+
+revoke all on public.categories from anon, authenticated;
+
+grant select on public.categories to anon, authenticated;
+grant insert, update, delete on public.categories to authenticated;
+
+create policy "todos ven categorias" on public.categories
+    for select to anon, authenticated
+    using (true);
+
+create policy "admin crea categorias" on public.categories
+    for insert to authenticated
+    with check (public.is_admin());
+
+create policy "admin edita categorias" on public.categories
+    for update to authenticated
+    using (public.is_admin())
+    with check (public.is_admin());
+
+create policy "admin borra categorias" on public.categories
+    for delete to authenticated
+    using (public.is_admin());
+
+insert into public.categories (slug, name, parent_slug, sort_order) values
+    ('shorts', 'Shorts', null, 1),
+    ('shorts-push-up', 'Push up', 'shorts', 1),
+    ('shorts-sin-frunce', 'Sin frunce', 'shorts', 2),
+    ('calzas', 'Calzas', null, 2),
+    ('calzas-rectas', 'Rectas', 'calzas', 1),
+    ('calzas-oxford', 'Oxford', 'calzas', 2),
+    ('tops-deportivos', 'Tops deportivos', null, 3),
+    ('corpinos-deportivos', 'Corpiños deportivos', null, 4);
+
+
+-- PRODUCTOS
+-- Buzos y joggers quedan "sin categoría" hasta elegirles una en el panel.
+-- Una categoría con productos no se puede borrar.
+
+alter table public.products
+    drop constraint products_category_check,
+    alter column category drop not null;
+
+update public.products set category = 'tops-deportivos' where category = 'tops';
+update public.products set category = null where category in ('buzos', 'joggers');
+
+alter table public.products
+    add constraint products_category_fkey
+        foreign key (category) references public.categories (slug)
+        on update cascade on delete restrict;
+
+
+-- PAGO Y ENTREGA
+-- status pasa a ser solo el pago: pendiente, pagado o cancelado.
+-- La entrega se marca aparte, así un pedido puede estar pagado y sin entregar
+-- o entregado y todavía sin cobrar.
+
+alter table public.orders
+    add column delivered boolean not null default false;
+
+update public.orders
+set status = 'pagado', delivered = true
+where status = 'entregado';
+
+alter table public.orders
+    drop constraint orders_status_check,
+    add constraint orders_status_check
+        check (status in ('pendiente', 'pagado', 'cancelado'));
+
+
+-- ELIMINAR PEDIDOS
+
+grant delete on public.orders to authenticated;
+
+create policy "admin borra ventas" on public.orders
+    for delete to authenticated
+    using (public.is_admin());
+
+-- Un pedido que no estaba cancelado todavía tiene el stock tomado: se devuelve.
+
+create function public.return_deleted_order_stock()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    v_item public.order_items%rowtype;
+begin
+    if old.status = 'cancelado' then
+        return old;
+    end if;
+
+    for v_item in
+        select * from public.order_items
+        where order_id = old.id and stock_reserved
+    loop
+        update public.product_stock
+        set quantity = quantity + v_item.quantity
+        where product_id = v_item.product_id
+            and size = v_item.size
+            and color = v_item.color;
+    end loop;
+
+    return old;
+end;
+$$;
+
+revoke all on function public.return_deleted_order_stock() from public, anon, authenticated;
+
+create trigger orders_return_stock_on_delete
+    before delete on public.orders
+    for each row
+    execute function public.return_deleted_order_stock();
+
+
+-- CREAR PEDIDO DESDE LA TIENDA
+-- Es la misma función de migracion-tienda.sql; solo cambia el descuento.
+
+create or replace function public.create_order(
+    p_code text,
+    p_customer_name text,
+    p_customer_phone text,
+    p_details text,
+    p_payment_method text,
+    p_delivery_method text,
+    p_delivery_zone text,
+    p_items jsonb
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    v_order_id uuid;
+    v_item jsonb;
+    v_product public.products%rowtype;
+    v_quantity integer;
+    v_size text;
+    v_color text;
+    v_subtotal integer := 0;
+    v_discount integer := 0;
+    v_pending boolean := false;
+    v_units integer := 0;
+    v_reserved boolean;
+    v_headers json := nullif(current_setting('request.headers', true), '')::json;
+    v_client text;
+begin
+    -- Límites contra pedidos falsos en masa
+    v_client := md5(coalesce(
+        v_headers ->> 'cf-connecting-ip',
+        split_part(v_headers ->> 'x-forwarded-for', ',', 1),
+        ''
+    ));
+
+    if (select count(*) from public.orders
+        where created_at > now() - interval '1 hour') >= 120 then
+        raise exception 'Demasiados pedidos';
+    end if;
+
+    if (select count(*) from public.orders
+        where client_hash = v_client
+        and created_at > now() - interval '10 minutes') >= 10 then
+        raise exception 'Demasiados pedidos';
+    end if;
+
+    if p_code !~ '^[A-Z0-9]{8}$' then
+        raise exception 'Código de pedido inválido';
+    end if;
+
+    if char_length(trim(p_customer_name)) not between 2 and 80 then
+        raise exception 'Nombre inválido';
+    end if;
+
+    if trim(p_customer_phone) !~ '^[0-9+() -]{8,20}$' then
+        raise exception 'Teléfono inválido';
+    end if;
+
+    if char_length(trim(p_details)) > 1000 then
+        raise exception 'Detalles inválidos';
+    end if;
+
+    if p_payment_method not in ('mercado-pago', 'transferencia', 'entrega') then
+        raise exception 'Método de pago inválido';
+    end if;
+
+    if p_delivery_method not in ('encuentro', 'uber') then
+        raise exception 'Forma de entrega inválida';
+    end if;
+
+    if char_length(trim(p_delivery_zone)) not between 2 and 200 then
+        raise exception 'Zona de entrega inválida';
+    end if;
+
+    if p_items is null
+        or jsonb_typeof(p_items) <> 'array'
+        or jsonb_array_length(p_items) not between 1 and 50 then
+        raise exception 'Productos inválidos';
+    end if;
+
+    insert into public.orders (code, customer_name, customer_phone, details, payment_method, delivery_method, delivery_zone, client_hash)
+    values (p_code, trim(p_customer_name), trim(p_customer_phone), trim(p_details), p_payment_method, p_delivery_method, trim(p_delivery_zone), v_client)
+    on conflict (code) do nothing
+    returning id into v_order_id;
+
+    if v_order_id is null then
+        return;
+    end if;
+
+    for v_item in select * from jsonb_array_elements(p_items) loop
+        v_quantity := (v_item ->> 'quantity')::integer;
+        v_size := coalesce(v_item ->> 'size', '');
+        v_color := coalesce(v_item ->> 'color', '');
+
+        if v_quantity not between 1 and 99 then
+            raise exception 'Cantidad inválida';
+        end if;
+
+        v_units := v_units + v_quantity;
+
+        -- Sin este tope, pocos pedidos falsos dejarían la tienda sin stock
+        if v_units > 20 then
+            raise exception 'Máximo 20 unidades por pedido. Para más, escribinos por WhatsApp.';
+        end if;
+
+        select * into v_product
+        from public.products
+        where id = v_item ->> 'id' and active;
+
+        if not found then
+            raise exception 'Producto no disponible';
+        end if;
+
+        if (cardinality(v_product.sizes) = 0 and v_size <> '')
+            or (cardinality(v_product.sizes) > 0 and not v_size = any (v_product.sizes)) then
+            raise exception 'Talle no disponible';
+        end if;
+
+        if (cardinality(v_product.colors) = 0 and v_color <> '')
+            or (cardinality(v_product.colors) > 0 and not v_color = any (v_product.colors)) then
+            raise exception 'Color no disponible';
+        end if;
+
+        -- Se descuenta en un solo paso: dos compras no pueden llevarse la última unidad
+        v_reserved := false;
+
+        if v_product.track_stock then
+
+            update public.product_stock
+            set quantity = quantity - v_quantity
+            where product_id = v_product.id
+                and size = v_size
+                and color = v_color
+                and quantity >= v_quantity;
+
+            if not found then
+                raise exception 'Sin stock: % %', v_product.name,
+                    nullif(concat_ws(' ', nullif(v_size, ''), nullif(v_color, '')), '');
+            end if;
+
+            v_reserved := true;
+
+        end if;
+
+        insert into public.order_items (order_id, product_id, name, size, color, unit_price, unit_cost, quantity, stock_reserved)
+        values (
+            v_order_id, v_product.id, v_product.name, v_size, v_color, v_product.price,
+            (select cost from public.product_costs where product_id = v_product.id),
+            v_quantity,
+            v_reserved
+        );
+
+        v_subtotal := v_subtotal + v_product.price * v_quantity;
+        v_pending := v_pending or v_product.price = 0;
+    end loop;
+
+    -- Mismos porcentajes que PAYMENT_CONFIG.discounts en scripts/carrito.js
+    if p_payment_method in ('mercado-pago', 'transferencia') then
+        v_discount := round(v_subtotal * 10 / 100.0);
+    end if;
+
+    update public.orders
+    set subtotal = v_subtotal,
+        discount = v_discount,
+        total = v_subtotal - v_discount,
+        has_pending_prices = v_pending
+    where id = v_order_id;
+end;
+$$;

@@ -35,30 +35,106 @@
         </nav>
     </header>
     <main>
-        <h1>Nosotros</h1>
+        <section class="nosotros-intro" aria-labelledby="nosotros-h1">
+            <p class="nosotros_etiqueta">Nuestra esencia</p>
+            <h1 id="nosotros-h1">Nosotros</h1>
+        </section>
+
         <section class="Nosotros" aria-labelledby="nosotros-titulo">
             <div class="nosotros_imagen">
                  <img src="../img/movea_banner.jpg" alt="Colección de ropa deportiva Movea">
             </div>
 
             <div class="text_nosotros">
-                <p class="nosotros_etiqueta">Nuestra esencia</p>
+                <p class="nosotros_etiqueta">Nuestra historia</p>
                 <h2 id="nosotros-titulo">¿Quiénes somos?</h2>
                 <div class="linea"></div>
-                <p>MOVEA nació de una idea simple: sentirnos cómodas sin dejar de sentirnos lindas.</p>
 
-                <p>Sabemos que no todos los días son iguales.</p>
+                <p class="nosotros_destacado">MOVEA nació de una idea simple: sentirnos cómodas sin dejar de sentirnos lindas.</p>
 
-                <p>Hay días en los que entrenamos con toda la energía y otros en los que simplemente damos lo mejor de nosotras. Por eso queremos crear prendas que te acompañen en cada momento.</p>
+                <p>Sabemos que no todos los días son iguales. Hay días en los que entrenamos con toda la energía y otros en los que simplemente damos lo mejor de nosotras. Por eso creamos prendas que te acompañen en cada momento.</p>
 
-                <p>Diseñamos MOVEA pensando en mujeres reales: prendas cómodas, versátiles y con estilo, hechas para entrenar, salir o simplemente sentirte bien con lo que llevás puesto.</p>
-                <p>Para nosotras, entrenar no se trata solamente de cambiar nuestro cuerpo. Se trata de sentirnos más fuertes, ganar confianza y disfrutar del proceso.</p>
+                <p>Para nosotras, entrenar no se trata solamente de cambiar el cuerpo. Se trata de sentirnos más fuertes, ganar confianza y disfrutar del proceso.</p>
 
-                <p>MOVEA es una invitación a sentirte cómoda, segura y vos misma.</p>
+                <blockquote class="nosotros_cita">
+                    <p>MOVEA es una invitación a sentirte cómoda, segura y vos misma.</p>
+                </blockquote>
 
                 <span>Wear your power</span>
             </div>
+        </section>
 
+        <section class="nosotros-valores" aria-labelledby="valores-titulo">
+            <div class="nosotros-seccion-titulo">
+                <p class="nosotros_etiqueta">Lo que nos mueve</p>
+                <h2 id="valores-titulo">Nuestros valores</h2>
+            </div>
+
+            <ul class="nosotros-grid">
+                <li class="nosotros-card">
+                    <i class="fa-solid fa-feather" aria-hidden="true"></i>
+                    <h3>Comodidad</h3>
+                    <p>Telas y calces que acompañan tu movimiento, del entrenamiento al resto del día.</p>
+                </li>
+                <li class="nosotros-card">
+                    <i class="fa-solid fa-shuffle" aria-hidden="true"></i>
+                    <h3>Versatilidad</h3>
+                    <p>Prendas que combinan entre sí y se adaptan a tu rutina, no al revés.</p>
+                </li>
+                <li class="nosotros-card">
+                    <i class="fa-solid fa-heart" aria-hidden="true"></i>
+                    <h3>Mujeres reales</h3>
+                    <p>Diseñamos para cuerpos reales y para que te sientas bien con lo que llevás puesto.</p>
+                </li>
+                <li class="nosotros-card">
+                    <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+                    <h3>Confianza</h3>
+                    <p>Creemos que moverte te hace más fuerte, por dentro y por fuera.</p>
+                </li>
+            </ul>
+        </section>
+
+        <section class="nosotros-confianza" aria-labelledby="confianza-titulo">
+            <h2 id="confianza-titulo" class="visually-hidden">Comprá con tranquilidad</h2>
+            <ul class="nosotros-grid">
+                <li>
+                    <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                    <div>
+                        <strong>Pago seguro</strong>
+                        <span>Con Mercado Pago</span>
+                    </div>
+                </li>
+                <li>
+                    <i class="fa-solid fa-rotate" aria-hidden="true"></i>
+                    <div>
+                        <strong>Cambios</strong>
+                        <span>Hasta 10 días después de recibir tu pedido</span>
+                    </div>
+                </li>
+                <li>
+                    <i class="fa-solid fa-truck-fast" aria-hidden="true"></i>
+                    <div>
+                        <strong>Envío por Uber</strong>
+                        <span>O retiro en punto de encuentro</span>
+                    </div>
+                </li>
+                <li>
+                    <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
+                    <div>
+                        <strong>Atención personalizada</strong>
+                        <span>Te respondemos por WhatsApp</span>
+                    </div>
+                </li>
+            </ul>
+        </section>
+
+        <section class="nosotros-cta" aria-labelledby="cta-titulo">
+            <h2 id="cta-titulo">Encontrá tu próxima prenda favorita</h2>
+            <p>Descubrí la colección y elegí lo que mejor va con vos.</p>
+            <div class="nosotros-cta__acciones">
+                <a class="nosotros-boton" href="./productos.html">Ver productos</a>
+                <a class="nosotros-boton nosotros-boton--secundario" href="./contacto.html">Contactanos</a>
+            </div>
         </section>
     </main>
 
@@ -72,7 +148,18 @@
                 <i class="fa-brands fa-instagram" aria-hidden="true"></i>
             </a>
 
+            <a href="https://wa.me/5491151227752" data-whatsapp="" target="_blank" rel="noopener noreferrer" aria-label="Movea en WhatsApp">
+                <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
+            </a>
+
         </div>
+
+        <h2 class="footer-pagos-titulo">Medios de pago</h2>
+        <ul class="footer-pagos">
+            <li><i class="fa-solid fa-credit-card" aria-hidden="true"></i> Mercado Pago</li>
+            <li><i class="fa-solid fa-building-columns" aria-hidden="true"></i> Transferencia</li>
+            <li><i class="fa-solid fa-money-bill-wave" aria-hidden="true"></i> Efectivo</li>
+        </ul>
     </section>
 
     <section class="tienda_links_footer">
@@ -135,5 +222,7 @@
 
 </footer>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script src="../scripts/tienda-config.js"></script>
+
 </body>
 </html>

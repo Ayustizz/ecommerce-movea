@@ -23,7 +23,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha384-t1nt8BQoYMLFN5p42tRAtuAAFQaCQODekUVeKKZrEnEyp4H2R0RHFz0KWpmj7i8g" crossorigin="anonymous">
 </head>
 
-<body>
+<body class="admin-page">
 
     <!-- =========================
          HEADER
@@ -118,466 +118,706 @@
 
         <section id="admin-panel" class="admin-panel" hidden>
 
-            <h1>Administración</h1>
+            <!-- Menú lateral -->
 
-            <div class="admin-tabs" role="tablist" aria-label="Secciones del panel">
+            <aside class="admin-sidebar">
 
-                <button
-                    type="button"
-                    id="tab-products"
-                    class="admin-tab active"
-                    role="tab"
-                    aria-selected="true"
-                    aria-controls="view-products">
-                    Productos
-                </button>
+                <div class="admin-sidebar__head">
+                    <p class="admin-sidebar__label">Panel</p>
+                    <h1>Administración</h1>
+                </div>
 
-                <button
-                    type="button"
-                    id="tab-orders"
-                    class="admin-tab"
-                    role="tab"
-                    aria-selected="false"
-                    aria-controls="view-orders">
-                    Ventas
-                </button>
+                <div class="admin-tabs" role="tablist" aria-label="Secciones del panel" aria-orientation="vertical">
 
-                <button
-                    type="button"
-                    id="tab-accounts"
-                    class="admin-tab"
-                    role="tab"
-                    aria-selected="false"
-                    aria-controls="view-accounts">
-                    Cuentas
-                </button>
+                    <p class="admin-tabs__group" aria-hidden="true">Tienda</p>
 
-                <button
-                    type="button"
-                    id="tab-banners"
-                    class="admin-tab"
-                    role="tab"
-                    aria-selected="false"
-                    aria-controls="view-banners">
-                    Banners
-                </button>
+                    <button
+                        type="button"
+                        id="tab-products"
+                        class="admin-tab active"
+                        role="tab"
+                        aria-selected="true"
+                        aria-controls="view-products">
+                        <i class="fa-solid fa-shirt" aria-hidden="true"></i>
+                        Productos
+                    </button>
+
+                    <button
+                        type="button"
+                        id="tab-categories"
+                        class="admin-tab"
+                        role="tab"
+                        aria-selected="false"
+                        aria-controls="view-categories">
+                        <i class="fa-solid fa-tags" aria-hidden="true"></i>
+                        Categorías
+                    </button>
+
+                    <button
+                        type="button"
+                        id="tab-banners"
+                        class="admin-tab"
+                        role="tab"
+                        aria-selected="false"
+                        aria-controls="view-banners">
+                        <i class="fa-solid fa-images" aria-hidden="true"></i>
+                        Banners
+                    </button>
+
+                    <p class="admin-tabs__group" aria-hidden="true">Negocio</p>
+
+                    <button
+                        type="button"
+                        id="tab-orders"
+                        class="admin-tab"
+                        role="tab"
+                        aria-selected="false"
+                        aria-controls="view-orders">
+                        <i class="fa-solid fa-receipt" aria-hidden="true"></i>
+                        Ventas
+                    </button>
+
+                    <button
+                        type="button"
+                        id="tab-accounts"
+                        class="admin-tab"
+                        role="tab"
+                        aria-selected="false"
+                        aria-controls="view-accounts">
+                        <i class="fa-solid fa-chart-line" aria-hidden="true"></i>
+                        Cuentas
+                    </button>
+
+                </div>
+
+                <div class="admin-sidebar__foot">
+
+                    <p id="admin-user" class="admin-sidebar__user"></p>
+
+                    <a href="../index.html" class="admin-sidebar__store" target="_blank" rel="noopener">
+                        <i class="fa-solid fa-store" aria-hidden="true"></i>
+                        Ver tienda
+                    </a>
+
+                </div>
+
+            </aside>
+
+
+            <div class="admin-content">
+
+                <p id="admin-message" class="admin-error" role="alert" hidden></p>
+
+
+                <!-- PRODUCTOS -->
+
+                <section id="view-products" class="admin-view" role="tabpanel" aria-labelledby="tab-products">
+
+                    <header class="admin-view__header">
+
+                        <div>
+                            <h2>Productos</h2>
+                            <p>El catálogo de la tienda: precios, talles, stock y fotos.</p>
+                        </div>
+
+                        <button type="button" id="product-new" class="admin-button admin-button--auto">
+                            <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                            Nuevo producto
+                        </button>
+
+                    </header>
+
+
+                    <!-- Formulario -->
+
+                    <form id="product-form" class="admin-card admin-form" hidden>
+
+                        <div class="admin-form__header">
+                            <h3 id="product-form-title">Nuevo producto</h3>
+                            <p>Los campos con * son obligatorios.</p>
+                        </div>
+
+                        <div class="admin-form__layout">
+
+                            <div class="admin-form__main">
+
+                                <fieldset class="admin-form__section">
+
+                                    <legend>Información</legend>
+
+                                    <div class="checkout-field">
+
+                                        <label for="product-name">Nombre *</label>
+
+                                        <input type="text" id="product-name" minlength="2" maxlength="80" required>
+
+                                    </div>
+
+                                    <div class="checkout-field">
+
+                                        <label for="product-description">Descripción</label>
+
+                                        <textarea id="product-description" rows="3" maxlength="500"></textarea>
+
+                                    </div>
+
+                                    <div class="checkout-field">
+
+                                        <label for="product-category">Categoría *</label>
+
+                                        <select id="product-category" required>
+                                            <option value="">Elegí una categoría</option>
+                                        </select>
+
+                                    </div>
+
+                                </fieldset>
+
+                                <fieldset class="admin-form__section">
+
+                                    <legend>Precio</legend>
+
+                                    <div class="admin-form__row admin-form__row--3">
+
+                                        <div class="checkout-field">
+
+                                            <label for="product-price">Precio en pesos *</label>
+
+                                            <input type="number" id="product-price" min="0" step="1" inputmode="numeric" required>
+
+                                            <small>Con 0 se muestra "Consultar precio".</small>
+
+                                        </div>
+
+                                        <div class="checkout-field">
+
+                                            <label for="product-compare-price">Precio anterior</label>
+
+                                            <input type="number" id="product-compare-price" min="0" step="1" inputmode="numeric">
+
+                                            <small>Se muestra tachado si es oferta.</small>
+
+                                        </div>
+
+                                        <div class="checkout-field">
+
+                                            <label for="product-cost">Costo por unidad</label>
+
+                                            <input type="number" id="product-cost" min="0" step="1" inputmode="numeric">
+
+                                            <small>Privado: no se ve en la tienda.</small>
+
+                                        </div>
+
+                                    </div>
+
+                                </fieldset>
+
+                                <fieldset class="admin-form__section">
+
+                                    <legend>Variantes y stock</legend>
+
+                                    <fieldset class="admin-sizes">
+
+                                        <legend>Talles disponibles</legend>
+
+                                        <div class="admin-form__checks admin-form__checks--pills">
+                                            <label><input type="checkbox" name="productSize" value="XS"> XS</label>
+                                            <label><input type="checkbox" name="productSize" value="S"> S</label>
+                                            <label><input type="checkbox" name="productSize" value="M"> M</label>
+                                            <label><input type="checkbox" name="productSize" value="L"> L</label>
+                                            <label><input type="checkbox" name="productSize" value="XL"> XL</label>
+                                            <label><input type="checkbox" name="productSize" value="XXL"> XXL</label>
+                                            <label><input type="checkbox" name="productSize" value="Único"> Único</label>
+                                        </div>
+
+                                    </fieldset>
+
+                                    <div class="checkout-field">
+
+                                        <label for="product-colors">Colores disponibles</label>
+
+                                        <input type="text" id="product-colors" maxlength="200" placeholder="Ej.: Negro, Blanco, Marrón">
+
+                                        <small>Separados por coma. Si hay uno solo, se elige automáticamente.</small>
+
+                                    </div>
+
+                                    <div class="admin-form__checks">
+                                        <label>
+                                            <input type="checkbox" id="product-track-stock">
+                                            Controlar stock por talle y color
+                                        </label>
+                                    </div>
+
+                                    <div id="product-stock-grid" class="admin-stock-grid" hidden></div>
+
+                                </fieldset>
+
+                            </div>
+
+                            <div class="admin-form__side">
+
+                                <fieldset class="admin-form__section">
+
+                                    <legend>Foto</legend>
+
+                                    <img id="product-image-preview" class="admin-form__preview" alt="Foto actual del producto" hidden>
+
+                                    <div class="checkout-field">
+
+                                        <label for="product-image">Subir foto</label>
+
+                                        <input type="file" id="product-image" accept="image/jpeg,image/png,image/webp">
+
+                                        <small>JPG, PNG o WebP, hasta 5 MB.</small>
+
+                                    </div>
+
+                                </fieldset>
+
+                                <fieldset class="admin-form__section">
+
+                                    <legend>Visibilidad</legend>
+
+                                    <div class="admin-form__checks admin-form__checks--stack">
+
+                                        <label>
+                                            <input type="checkbox" id="product-active" checked>
+                                            Visible en la tienda
+                                        </label>
+
+                                        <label>
+                                            <input type="checkbox" id="product-featured">
+                                            Destacado en el inicio
+                                        </label>
+
+                                        <label>
+                                            <input type="checkbox" id="product-offer">
+                                            Etiqueta de oferta
+                                        </label>
+
+                                    </div>
+
+                                </fieldset>
+
+                            </div>
+
+                        </div>
+
+                        <p id="product-form-error" class="admin-error" role="alert" hidden></p>
+
+                        <div class="admin-form__actions">
+
+                            <button type="button" id="product-cancel" class="admin-button admin-button--soft">
+                                Cancelar
+                            </button>
+
+                            <button type="submit" id="product-save" class="admin-button">
+                                Guardar producto
+                            </button>
+
+                        </div>
+
+                    </form>
+
+
+                    <!-- Listado -->
+
+                    <div class="admin-toolbar">
+
+                        <div class="admin-search">
+
+                            <label for="products-search" class="admin-sr-only">Buscar productos</label>
+
+                            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+
+                            <input type="search" id="products-search" placeholder="Buscar por nombre..." autocomplete="off">
+
+                        </div>
+
+                        <div class="admin-toolbar__filter">
+
+                            <label for="products-category-filter" class="admin-sr-only">Filtrar por categoría</label>
+
+                            <select id="products-category-filter">
+                                <option value="">Todas las categorías</option>
+                            </select>
+
+                        </div>
+
+                        <p id="products-count" class="product-filter__count" aria-live="polite"></p>
+
+                    </div>
+
+                    <div id="products-list" class="admin-list" aria-live="polite"></div>
+
+                </section>
+
+
+                <!-- CATEGORÍAS -->
+
+                <section id="view-categories" class="admin-view" role="tabpanel" aria-labelledby="tab-categories" hidden>
+
+                    <header class="admin-view__header">
+
+                        <div>
+                            <h2>Categorías</h2>
+                            <p>Ordenan los filtros de la tienda. Pueden tener subcategorías.</p>
+                        </div>
+
+                    </header>
+
+                    <div class="admin-split">
+
+                        <form id="category-form" class="admin-card admin-form">
+
+                            <div class="admin-form__header">
+                                <h3>Nueva categoría</h3>
+                            </div>
+
+                            <div class="checkout-field">
+
+                                <label for="category-name">Nombre *</label>
+
+                                <input type="text" id="category-name" minlength="2" maxlength="60" placeholder="Ej.: Enteritos" required>
+
+                            </div>
+
+                            <div class="checkout-field">
+
+                                <label for="category-parent">Dentro de</label>
+
+                                <select id="category-parent">
+                                    <option value="">Ninguna (categoría principal)</option>
+                                </select>
+
+                                <small>Elegí una para crear una subcategoría, por ejemplo "Push up" dentro de "Shorts".</small>
+
+                            </div>
+
+                            <p id="category-error" class="admin-error" role="alert" hidden></p>
+
+                            <button type="submit" id="category-save" class="admin-button">
+                                <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                                Agregar categoría
+                            </button>
+
+                        </form>
+
+                        <div id="categories-list" class="admin-list" aria-live="polite"></div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- BANNERS -->
+
+                <section id="view-banners" class="admin-view" role="tabpanel" aria-labelledby="tab-banners" hidden>
+
+                    <header class="admin-view__header">
+
+                        <div>
+                            <h2>Banners</h2>
+                            <p>Las imágenes que rotan al principio de la página de inicio.</p>
+                        </div>
+
+                    </header>
+
+                    <div class="admin-split">
+
+                        <form id="banner-form" class="admin-card admin-form">
+
+                            <div class="admin-form__header">
+                                <h3>Nuevo banner</h3>
+                            </div>
+
+                            <div class="checkout-field">
+
+                                <label for="banner-image">Imagen *</label>
+
+                                <input type="file" id="banner-image" accept="image/jpeg,image/png,image/webp" required>
+
+                                <small>Tamaño ideal: 1600 × 700 px, hasta 5 MB. En otras medidas se recorta.</small>
+
+                            </div>
+
+                            <div class="checkout-field">
+
+                                <label for="banner-alt">¿Qué dice o muestra? *</label>
+
+                                <input type="text" id="banner-alt" minlength="2" maxlength="160" placeholder="Ej.: Nueva colección de otoño" required>
+
+                                <small>Lo usan los lectores de pantalla y Google.</small>
+
+                            </div>
+
+                            <p id="banner-error" class="admin-error" role="alert" hidden></p>
+
+                            <button type="submit" id="banner-save" class="admin-button">
+                                <i class="fa-solid fa-upload" aria-hidden="true"></i>
+                                Agregar banner
+                            </button>
+
+                        </form>
+
+                        <div id="banners-list" class="admin-list" aria-live="polite"></div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- VENTAS -->
+
+                <section id="view-orders" class="admin-view" role="tabpanel" aria-labelledby="tab-orders" hidden>
+
+                    <header class="admin-view__header">
+
+                        <div>
+                            <h2>Ventas</h2>
+                            <p>Los pedidos de la tienda. Cambiá el estado a medida que avanzan.</p>
+                        </div>
+
+                        <button type="button" id="orders-export" class="admin-button admin-button--auto admin-button--soft">
+                            <i class="fa-solid fa-download" aria-hidden="true"></i>
+                            Descargar ventas
+                        </button>
+
+                    </header>
+
+                    <div class="admin-stats admin-stats--four">
+
+                        <div class="admin-stat">
+                            <i class="fa-solid fa-sack-dollar" aria-hidden="true"></i>
+                            <span>Cobrado este mes</span>
+                            <strong id="stat-month">$0</strong>
+                            <small id="stat-count"></small>
+                        </div>
+
+                        <div class="admin-stat">
+                            <i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>
+                            <span>Por cobrar</span>
+                            <strong id="stat-pending">0</strong>
+                            <small id="stat-pending-amount"></small>
+                        </div>
+
+                        <div class="admin-stat">
+                            <i class="fa-solid fa-truck" aria-hidden="true"></i>
+                            <span>Por entregar</span>
+                            <strong id="stat-undelivered">0</strong>
+                            <small>Pedidos sin cancelar</small>
+                        </div>
+
+                        <div class="admin-stat">
+                            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                            <span>Completados</span>
+                            <strong id="stat-done">0</strong>
+                            <small>Pagados y entregados</small>
+                        </div>
+
+                    </div>
+
+                    <div class="admin-toolbar">
+
+                        <div class="admin-search">
+
+                            <label for="orders-search" class="admin-sr-only">Buscar pedidos</label>
+
+                            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+
+                            <input type="search" id="orders-search" placeholder="Buscar por código, cliente o teléfono..." autocomplete="off">
+
+                        </div>
+
+                        <div class="admin-toolbar__filter">
+
+                            <label for="orders-filter" class="admin-sr-only">Mostrar</label>
+
+                            <select id="orders-filter">
+                                <option value="">Todos los pedidos</option>
+                                <option value="por-cobrar">Por cobrar</option>
+                                <option value="por-entregar">Por entregar</option>
+                                <option value="pagado-sin-entregar">Pagados sin entregar</option>
+                                <option value="entregado-sin-cobrar">Entregados sin cobrar</option>
+                                <option value="completado">Completados</option>
+                                <option value="cancelado">Cancelados</option>
+                            </select>
+
+                        </div>
+
+                        <p id="orders-count" class="product-filter__count" aria-live="polite"></p>
+
+                    </div>
+
+                    <div id="orders-list" class="admin-list" aria-live="polite"></div>
+
+                </section>
+
+
+                <!-- CUENTAS -->
+
+                <section id="view-accounts" class="admin-view" role="tabpanel" aria-labelledby="tab-accounts" hidden>
+
+                    <header class="admin-view__header">
+
+                        <div>
+                            <h2>Cuentas</h2>
+                            <p>Ganancia del mes. Solo cuenta pedidos pagados.</p>
+                        </div>
+
+                        <div class="admin-view__actions">
+
+                            <div class="admin-toolbar__filter">
+
+                                <label for="accounts-month" class="admin-sr-only">Mes</label>
+
+                                <input type="month" id="accounts-month" required>
+
+                            </div>
+
+                            <button type="button" id="expenses-export" class="admin-button admin-button--auto admin-button--soft">
+                                <i class="fa-solid fa-download" aria-hidden="true"></i>
+                                Descargar gastos
+                            </button>
+
+                        </div>
+
+                    </header>
+
+                    <div class="admin-stats admin-stats--four">
+
+                        <div class="admin-stat">
+                            <i class="fa-solid fa-arrow-trend-up" aria-hidden="true"></i>
+                            <span>Ingresos</span>
+                            <strong id="account-income">$0</strong>
+                        </div>
+
+                        <div class="admin-stat">
+                            <i class="fa-solid fa-boxes-stacked" aria-hidden="true"></i>
+                            <span>Costo de lo vendido</span>
+                            <strong id="account-cost">$0</strong>
+                        </div>
+
+                        <div class="admin-stat">
+                            <i class="fa-solid fa-wallet" aria-hidden="true"></i>
+                            <span>Gastos</span>
+                            <strong id="account-expenses">$0</strong>
+                        </div>
+
+                        <div class="admin-stat admin-stat--highlight" id="account-profit-card">
+                            <i class="fa-solid fa-coins" aria-hidden="true"></i>
+                            <span>Ganancia neta</span>
+                            <strong id="account-profit">$0</strong>
+                            <small id="account-margin"></small>
+                        </div>
+
+                    </div>
+
+                    <p id="account-warning" class="cart-pending admin-warning" hidden></p>
+
+
+                    <!-- Por producto -->
+
+                    <h3 class="admin-section-title">Por producto</h3>
+
+                    <div class="admin-table-wrap">
+
+                        <table class="admin-table">
+
+                            <thead>
+                                <tr>
+                                    <th scope="col">Producto</th>
+                                    <th scope="col">Unidades</th>
+                                    <th scope="col">Ingresos</th>
+                                    <th scope="col">Costo</th>
+                                    <th scope="col">Ganancia</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="account-products"></tbody>
+
+                        </table>
+
+                    </div>
+
+
+                    <!-- Gastos -->
+
+                    <h3 class="admin-section-title">Gastos del negocio</h3>
+
+                    <div class="admin-split">
+
+                        <form id="expense-form" class="admin-card admin-form">
+
+                            <div class="admin-form__header">
+                                <h3>Nuevo gasto</h3>
+                            </div>
+
+                            <div class="checkout-field">
+
+                                <label for="expense-concept">Concepto *</label>
+
+                                <input type="text" id="expense-concept" minlength="2" maxlength="120" placeholder="Ej.: Publicidad en Instagram" required>
+
+                            </div>
+
+                            <div class="checkout-field">
+
+                                <label for="expense-category">Categoría *</label>
+
+                                <select id="expense-category" required>
+                                    <option value="envios">Envíos</option>
+                                    <option value="publicidad">Publicidad</option>
+                                    <option value="packaging">Packaging</option>
+                                    <option value="comisiones">Comisiones</option>
+                                    <option value="otros">Otros</option>
+                                </select>
+
+                            </div>
+
+                            <div class="admin-form__row">
+
+                                <div class="checkout-field">
+
+                                    <label for="expense-amount">Importe *</label>
+
+                                    <input type="number" id="expense-amount" min="1" step="1" inputmode="numeric" required>
+
+                                </div>
+
+                                <div class="checkout-field">
+
+                                    <label for="expense-date">Fecha *</label>
+
+                                    <input type="date" id="expense-date" required>
+
+                                </div>
+
+                            </div>
+
+                            <small class="admin-form__note">
+                                No cargues acá la compra de mercadería: ya se cuenta con el
+                                costo por unidad de cada producto vendido.
+                            </small>
+
+                            <p id="expense-error" class="admin-error" role="alert" hidden></p>
+
+                            <button type="submit" id="expense-save" class="admin-button">
+                                <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                                Agregar gasto
+                            </button>
+
+                        </form>
+
+                        <div id="expenses-list" class="admin-list" aria-live="polite"></div>
+
+                    </div>
+
+                </section>
 
             </div>
-
-            <p id="admin-message" class="admin-error" role="alert" hidden></p>
-
-
-            <!-- PRODUCTOS -->
-
-            <section id="view-products" role="tabpanel" aria-labelledby="tab-products">
-
-                <div class="admin-toolbar">
-
-                    <p id="products-count" class="product-filter__count" aria-live="polite"></p>
-
-                    <button type="button" id="product-new" class="admin-button admin-button--auto">
-                        <i class="fa-solid fa-plus" aria-hidden="true"></i>
-                        Nuevo producto
-                    </button>
-
-                </div>
-
-
-                <!-- Formulario -->
-
-                <form id="product-form" class="admin-card admin-form" hidden>
-
-                    <h2 id="product-form-title">Nuevo producto</h2>
-
-                    <div class="checkout-field">
-
-                        <label for="product-name">Nombre *</label>
-
-                        <input type="text" id="product-name" minlength="2" maxlength="80" required>
-
-                    </div>
-
-                    <div class="checkout-field">
-
-                        <label for="product-description">Descripción</label>
-
-                        <textarea id="product-description" rows="3" maxlength="500"></textarea>
-
-                    </div>
-
-                    <div class="admin-form__row">
-
-                        <div class="checkout-field">
-
-                            <label for="product-category">Categoría *</label>
-
-                            <select id="product-category" required>
-                                <option value="buzos">Buzos</option>
-                                <option value="joggers">Joggers</option>
-                                <option value="tops">Tops</option>
-                                <option value="shorts">Shorts</option>
-                            </select>
-
-                        </div>
-
-                        <div class="checkout-field">
-
-                            <label for="product-price">Precio en pesos *</label>
-
-                            <input type="number" id="product-price" min="0" step="1" inputmode="numeric" required>
-
-                            <small>Con 0 se muestra "Consultar precio".</small>
-
-                        </div>
-
-                    </div>
-
-                    <div class="checkout-field">
-
-                        <label for="product-compare-price">Precio anterior</label>
-
-                        <input type="number" id="product-compare-price" min="0" step="1" inputmode="numeric">
-
-                        <small>Opcional. Se muestra tachado si marcás el producto como oferta.</small>
-
-                    </div>
-
-                    <div class="checkout-field">
-
-                        <label for="product-cost">Costo por unidad</label>
-
-                        <input type="number" id="product-cost" min="0" step="1" inputmode="numeric">
-
-                        <small>Lo que te cuesta cada unidad. Es privado: no se muestra en la tienda.</small>
-
-                    </div>
-
-                    <fieldset class="admin-sizes">
-
-                        <legend>Talles disponibles</legend>
-
-                        <div class="admin-form__checks">
-                            <label><input type="checkbox" name="productSize" value="XS"> XS</label>
-                            <label><input type="checkbox" name="productSize" value="S"> S</label>
-                            <label><input type="checkbox" name="productSize" value="M"> M</label>
-                            <label><input type="checkbox" name="productSize" value="L"> L</label>
-                            <label><input type="checkbox" name="productSize" value="XL"> XL</label>
-                            <label><input type="checkbox" name="productSize" value="XXL"> XXL</label>
-                            <label><input type="checkbox" name="productSize" value="Único"> Único</label>
-                        </div>
-
-                    </fieldset>
-
-                    <div class="checkout-field">
-
-                        <label for="product-colors">Colores disponibles</label>
-
-                        <input type="text" id="product-colors" maxlength="200" placeholder="Ej.: Negro, Blanco, Marrón">
-
-                        <small>Separados por coma. Si hay uno solo, se elige automáticamente.</small>
-
-                    </div>
-
-                    <fieldset class="admin-sizes">
-
-                        <legend>Stock</legend>
-
-                        <div class="admin-form__checks">
-                            <label>
-                                <input type="checkbox" id="product-track-stock">
-                                Controlar stock por talle y color
-                            </label>
-                        </div>
-
-                        <div id="product-stock-grid" class="admin-stock-grid" hidden></div>
-
-                    </fieldset>
-
-                    <div class="checkout-field">
-
-                        <label for="product-image">Foto (JPG, PNG o WebP, hasta 5 MB)</label>
-
-                        <input type="file" id="product-image" accept="image/jpeg,image/png,image/webp">
-
-                        <img id="product-image-preview" class="admin-form__preview" alt="Foto actual del producto" hidden>
-
-                    </div>
-
-                    <div class="admin-form__checks">
-
-                        <label>
-                            <input type="checkbox" id="product-active" checked>
-                            Visible en la tienda
-                        </label>
-
-                        <label>
-                            <input type="checkbox" id="product-featured">
-                            Destacado en el inicio
-                        </label>
-
-                        <label>
-                            <input type="checkbox" id="product-offer">
-                            Etiqueta de oferta
-                        </label>
-
-                    </div>
-
-                    <p id="product-form-error" class="admin-error" role="alert" hidden></p>
-
-                    <div class="admin-form__actions">
-
-                        <button type="button" id="product-cancel" class="admin-button admin-button--soft">
-                            Cancelar
-                        </button>
-
-                        <button type="submit" id="product-save" class="admin-button">
-                            Guardar
-                        </button>
-
-                    </div>
-
-                </form>
-
-
-                <!-- Listado -->
-
-                <div id="products-list" class="admin-list" aria-live="polite"></div>
-
-            </section>
-
-
-            <!-- VENTAS -->
-
-            <section id="view-orders" role="tabpanel" aria-labelledby="tab-orders" hidden>
-
-                <div class="admin-stats">
-
-                    <div class="admin-stat">
-                        <span>Cobrado este mes</span>
-                        <strong id="stat-month">$0</strong>
-                    </div>
-
-                    <div class="admin-stat">
-                        <span>Pedidos pendientes</span>
-                        <strong id="stat-pending">0</strong>
-                    </div>
-
-                    <div class="admin-stat">
-                        <span>Ventas este mes</span>
-                        <strong id="stat-count">0</strong>
-                    </div>
-
-                </div>
-
-                <div class="admin-toolbar">
-
-                    <div class="checkout-field admin-toolbar__filter">
-
-                        <label for="orders-filter">Estado</label>
-
-                        <select id="orders-filter">
-                            <option value="">Todos</option>
-                            <option value="pendiente">Pendientes</option>
-                            <option value="pagado">Pagados</option>
-                            <option value="entregado">Entregados</option>
-                            <option value="cancelado">Cancelados</option>
-                        </select>
-
-                    </div>
-
-                    <p id="orders-count" class="product-filter__count" aria-live="polite"></p>
-
-                    <button type="button" id="orders-export" class="admin-button admin-button--auto admin-button--soft">
-                        Descargar ventas
-                    </button>
-
-                </div>
-
-                <div id="orders-list" class="admin-list" aria-live="polite"></div>
-
-            </section>
-
-
-            <!-- CUENTAS -->
-
-            <section id="view-accounts" role="tabpanel" aria-labelledby="tab-accounts" hidden>
-
-                <div class="admin-toolbar">
-
-                    <div class="checkout-field admin-toolbar__filter">
-
-                        <label for="accounts-month">Mes</label>
-
-                        <input type="month" id="accounts-month" required>
-
-                    </div>
-
-                    <p class="product-filter__count">Solo cuenta pedidos pagados o entregados.</p>
-
-                    <button type="button" id="expenses-export" class="admin-button admin-button--auto admin-button--soft">
-                        Descargar gastos del mes
-                    </button>
-
-                </div>
-
-                <div class="admin-stats admin-stats--accounts">
-
-                    <div class="admin-stat">
-                        <span>Ingresos</span>
-                        <strong id="account-income">$0</strong>
-                    </div>
-
-                    <div class="admin-stat">
-                        <span>Costo de lo vendido</span>
-                        <strong id="account-cost">$0</strong>
-                    </div>
-
-                    <div class="admin-stat">
-                        <span>Gastos</span>
-                        <strong id="account-expenses">$0</strong>
-                    </div>
-
-                    <div class="admin-stat" id="account-profit-card">
-                        <span>Ganancia neta</span>
-                        <strong id="account-profit">$0</strong>
-                        <small id="account-margin"></small>
-                    </div>
-
-                </div>
-
-                <p id="account-warning" class="cart-pending admin-warning" hidden></p>
-
-
-                <!-- Por producto -->
-
-                <h2 class="admin-section-title">Por producto</h2>
-
-                <div class="admin-table-wrap">
-
-                    <table class="admin-table">
-
-                        <thead>
-                            <tr>
-                                <th scope="col">Producto</th>
-                                <th scope="col">Unidades</th>
-                                <th scope="col">Ingresos</th>
-                                <th scope="col">Costo</th>
-                                <th scope="col">Ganancia</th>
-                            </tr>
-                        </thead>
-
-                        <tbody id="account-products"></tbody>
-
-                    </table>
-
-                </div>
-
-
-                <!-- Gastos -->
-
-                <h2 class="admin-section-title">Gastos del negocio</h2>
-
-                <form id="expense-form" class="admin-card admin-form">
-
-                    <div class="admin-form__row">
-
-                        <div class="checkout-field">
-
-                            <label for="expense-concept">Concepto *</label>
-
-                            <input type="text" id="expense-concept" minlength="2" maxlength="120" placeholder="Ej.: Publicidad en Instagram" required>
-
-                        </div>
-
-                        <div class="checkout-field">
-
-                            <label for="expense-category">Categoría *</label>
-
-                            <select id="expense-category" required>
-                                <option value="envios">Envíos</option>
-                                <option value="publicidad">Publicidad</option>
-                                <option value="packaging">Packaging</option>
-                                <option value="comisiones">Comisiones</option>
-                                <option value="otros">Otros</option>
-                            </select>
-
-                        </div>
-
-                        <div class="checkout-field">
-
-                            <label for="expense-amount">Importe en pesos *</label>
-
-                            <input type="number" id="expense-amount" min="1" step="1" inputmode="numeric" required>
-
-                        </div>
-
-                        <div class="checkout-field">
-
-                            <label for="expense-date">Fecha *</label>
-
-                            <input type="date" id="expense-date" required>
-
-                        </div>
-
-                    </div>
-
-                    <small class="admin-form__note">
-                        No cargues acá la compra de mercadería: ya se cuenta con el
-                        costo por unidad de cada producto vendido.
-                    </small>
-
-                    <p id="expense-error" class="admin-error" role="alert" hidden></p>
-
-                    <button type="submit" id="expense-save" class="admin-button">
-                        Agregar gasto
-                    </button>
-
-                </form>
-
-                <div id="expenses-list" class="admin-list" aria-live="polite"></div>
-
-            </section>
-
-
-            <!-- BANNERS -->
-
-            <section id="view-banners" role="tabpanel" aria-labelledby="tab-banners" hidden>
-
-                <form id="banner-form" class="admin-card admin-form">
-
-                    <h2>Nuevo banner</h2>
-
-                    <div class="checkout-field">
-
-                        <label for="banner-image">Imagen *</label>
-
-                        <input type="file" id="banner-image" accept="image/jpeg,image/png,image/webp" required>
-
-                        <small>Tamaño ideal: 1600 × 700 px, hasta 5 MB. En otras medidas se recorta.</small>
-
-                    </div>
-
-                    <div class="checkout-field">
-
-                        <label for="banner-alt">¿Qué dice o muestra? *</label>
-
-                        <input type="text" id="banner-alt" minlength="2" maxlength="160" placeholder="Ej.: Nueva colección de otoño" required>
-
-                        <small>Lo usan los lectores de pantalla y Google.</small>
-
-                    </div>
-
-                    <p id="banner-error" class="admin-error" role="alert" hidden></p>
-
-                    <button type="submit" id="banner-save" class="admin-button">
-                        Agregar banner
-                    </button>
-
-                </form>
-
-                <div id="banners-list" class="admin-list" aria-live="polite"></div>
-
-            </section>
 
         </section>
 

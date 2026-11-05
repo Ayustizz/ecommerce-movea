@@ -1,16 +1,36 @@
 "use strict";
 
-// Reemplaza los productos del HTML por los del panel.
-// Si Supabase no responde, quedan los del HTML.
+// Carga los productos del panel en la lista.
+// Mientras tanto la lista queda con aria-busy ("Cargando productos...").
 
 (() => {
 
     const config = window.MOVEA_SUPABASE;
     const list = document.querySelector("[data-catalog]");
 
-    if (!list || !config || !config.url || !config.anonKey) return;
+    if (!list) return;
+
+    function showLoadError() {
+
+        const emptyMessage = list.querySelector("[data-product-empty]");
+
+        emptyMessage.textContent =
+            "No pudimos cargar los productos. Probá recargar la página.";
+        emptyMessage.hidden = false;
+
+        list.removeAttribute("aria-busy");
+
+    }
+
+    if (!config || !config.url || !config.anonKey) {
+        document.addEventListener("DOMContentLoaded", showLoadError);
+        return;
+    }
 
     const siteRoot = new URL("../", document.currentScript.src);
+
+    // Con esta cantidad o menos se muestra "Últimas unidades".
+    const LOW_STOCK = 3;
 
     function formatCardPrice(price) {
 
@@ -20,13 +40,27 @@
 
     }
 
-    function createCard(product) {
+    function getStockUnits(product) {
+
+        return product.product_stock.reduce((total, item) => total + item.quantity, 0);
+
+    }
+
+    function isSoldOut(product) {
+
+        return product.track_stock && getStockUnits(product) === 0;
+
+    }
+
+    function createCard(product, position) {
 
         const card = document.createElement("article");
 
         card.classList.add("product_card");
 
-        card.dataset.category = product.category;
+        card.dataset.category = product.category || "";
+        card.dataset.order = position;
+        card.dataset.created = product.created_at || "";
         card.dataset.id = product.id;
         card.dataset.name = product.name;
         card.dataset.price = product.price;
@@ -55,7 +89,11 @@
         const footer = document.createElement("div");
         footer.classList.add("product-card__footer");
 
-        if (product.on_offer && product.compare_price > product.price) {
+        const hasComparePrice = product.on_offer && product.compare_price > product.price;
+
+        if (hasComparePrice) {
+
+            card.dataset.comparePrice = product.compare_price;
 
             const comparePrice = document.createElement("s");
 
@@ -89,28 +127,173 @@
 
             const label = document.createElement("span");
 
+            // Con precio anterior se muestra cuánto se ahorra.
+
+            const percent = hasComparePrice
+                ? Math.round((1 - product.price / product.compare_price) * 100)
+                : 0;
+
             label.classList.add("offer-label");
-            label.textContent = "Oferta";
+            label.textContent = percent > 0 ? `-${percent}%` : "Oferta";
 
             card.prepend(label);
 
         }
 
-        const isSoldOut =
-            product.track_stock &&
-            !product.product_stock.some(item => item.quantity > 0);
-
-        if (isSoldOut) {
+        if (isSoldOut(product)) {
 
             card.classList.add("is-sold-out");
 
-            button.disabled = true;
-            button.replaceChildren("Agotado");
-            button.removeAttribute("aria-label");
+            // En vez de un botón apagado, avisa por WhatsApp cuando vuelva.
+
+            const notify = document.createElement("a");
+
+            notify.classList.add("product-card__notify");
+            notify.href = window.MOVEA_TIENDA.whatsappUrl(
+                `¡Hola Movea! Quiero que me avisen cuando vuelva a haber stock de "${product.name}".`
+            );
+            notify.target = "_blank";
+            notify.rel = "noopener noreferrer";
+
+            const notifyIcon = document.createElement("i");
+            notifyIcon.classList.add("fa-regular", "fa-bell");
+            notifyIcon.setAttribute("aria-hidden", "true");
+
+            notify.append(notifyIcon, " Avisame cuando vuelva");
+
+            const soldOut = document.createElement("span");
+            soldOut.classList.add("sold-out-label");
+            soldOut.textContent = "Agotado";
+
+            button.replaceWith(notify);
+            card.prepend(soldOut);
+
+        } else if (product.track_stock && getStockUnits(product) <= LOW_STOCK) {
+
+            const lowStock = document.createElement("span");
+
+            lowStock.classList.add("stock-label");
+            lowStock.textContent = "Últimas unidades";
+
+            footer.before(lowStock);
 
         }
 
         return card;
+
+    }
+
+    // "Comprá por categoría" del inicio: una tarjeta por categoría principal
+    // que tenga productos, con la foto de uno de ellos.
+
+    function renderCategoryTiles(categories, products) {
+
+        const section = document.querySelector("[data-category-section]");
+
+        if (!section || !categories || !products) return;
+
+        const tiles = categories
+            .filter(category => !category.parent_slug)
+            .map(category => {
+
+                const slugs = [
+                    category.slug,
+                    ...categories
+                        .filter(item => item.parent_slug === category.slug)
+                        .map(item => item.slug)
+                ];
+
+                const items = products.filter(product => slugs.includes(product.category));
+
+                const withImage = items.find(product => product.image_url);
+
+                return { category, count: items.length, image: withImage && withImage.image_url };
+
+            })
+            .filter(tile => tile.count > 0)
+            .map(tile => {
+
+                const link = document.createElement("a");
+
+                link.classList.add("category-tile");
+                link.href = new URL(
+                    `Pages/productos.html?categoria=${encodeURIComponent(tile.category.slug)}`,
+                    siteRoot
+                ).href;
+
+                // La foto se muestra entera, como en las tarjetas de producto.
+
+                const picture = document.createElement("span");
+                picture.classList.add("category-tile__image");
+
+                if (tile.image) {
+
+                    const image = document.createElement("img");
+
+                    image.src = new URL(tile.image, siteRoot).href;
+                    image.alt = "";
+                    image.loading = "lazy";
+
+                    picture.append(image);
+
+                }
+
+                const text = document.createElement("span");
+                text.classList.add("category-tile__text");
+
+                const name = document.createElement("strong");
+                name.textContent = tile.category.name;
+
+                const count = document.createElement("span");
+                count.textContent = `${tile.count} ${tile.count === 1 ? "producto" : "productos"}`;
+
+                const arrow = document.createElement("i");
+                arrow.classList.add("fa-solid", "fa-arrow-right");
+                arrow.setAttribute("aria-hidden", "true");
+
+                text.append(name, count);
+                link.append(picture, text, arrow);
+
+                return link;
+
+            });
+
+        section.querySelector("[data-category-tiles]").replaceChildren(...tiles);
+        section.hidden = tiles.length === 0;
+
+    }
+
+
+    // Si las categorías no cargan, quedan las escritas en el HTML.
+
+    async function loadCategories() {
+
+        try {
+
+            const response = await fetch(
+                `${config.url}/rest/v1/categories?select=slug,name,parent_slug&order=sort_order.asc,created_at.asc`,
+                { headers: { apikey: config.anonKey } }
+            );
+
+            if (!response.ok) {
+                throw new Error(`Respuesta ${response.status}`);
+            }
+
+            const categories = await response.json();
+
+            document.dispatchEvent(
+                new CustomEvent("movea:categorias", { detail: categories })
+            );
+
+            return categories;
+
+        } catch (error) {
+
+            console.error("No se pudieron cargar las categorías:", error);
+
+            return null;
+
+        }
 
     }
 
@@ -119,7 +302,7 @@
         try {
 
             const response = await fetch(
-                `${config.url}/rest/v1/products?select=id,name,description,category,price,image_url,featured,sizes,colors,on_offer,compare_price,track_stock,product_stock(size,color,quantity)&order=sort_order.asc,created_at.asc`,
+                `${config.url}/rest/v1/products?select=id,name,description,category,price,image_url,created_at,featured,sizes,colors,on_offer,compare_price,track_stock,product_stock(size,color,quantity)&order=sort_order.asc,created_at.asc`,
                 { headers: { apikey: config.anonKey } }
             );
 
@@ -141,17 +324,30 @@
 
             list.querySelectorAll(".product_card").forEach(card => card.remove());
 
-            visibleProducts.forEach(product => {
-                emptyMessage.before(createCard(product));
-            });
+            // Los agotados van al final.
+
+            visibleProducts
+                .map((product, position) => createCard(product, position))
+                .sort((a, b) => {
+                    return a.classList.contains("is-sold-out") - b.classList.contains("is-sold-out");
+                })
+                .forEach(card => emptyMessage.before(card));
+
+            list.removeAttribute("aria-busy");
 
             document.dispatchEvent(
                 new CustomEvent("movea:catalogo", { detail: products })
             );
 
+            return products;
+
         } catch (error) {
 
             console.error("No se pudo cargar el catálogo:", error);
+
+            showLoadError();
+
+            return null;
 
         }
 
@@ -159,6 +355,12 @@
 
     // Espera a que el carrito y los filtros estén listos.
 
-    document.addEventListener("DOMContentLoaded", loadCatalog);
+    document.addEventListener("DOMContentLoaded", async () => {
+
+        const [categories, products] = await Promise.all([loadCategories(), loadCatalog()]);
+
+        renderCategoryTiles(categories, products);
+
+    });
 
 })();

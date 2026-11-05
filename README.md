@@ -19,14 +19,30 @@ Para activarlo:
 5. En SQL Editor, darle permisos: insert into public.admins (user_id) select id from auth.users where email = 'EMAIL_DEL_ADMIN';
 6. Copiar la URL del proyecto y la clave pública (anon o publishable) en scripts/supabase-config.js.
 
-Si la base ya existía, ejecutar una sola vez y en orden las migraciones que falten: supabase/migracion-talles-y-colores.sql, supabase/migracion-cuentas.sql, supabase/migracion-seguridad.sql, supabase/migracion-mercadopago.sql y supabase/migracion-tienda.sql. En una base nueva alcanza con schema.sql.
+Si la base ya existía, ejecutar una sola vez y en orden las migraciones que falten: supabase/migracion-talles-y-colores.sql, supabase/migracion-cuentas.sql, supabase/migracion-seguridad.sql, supabase/migracion-mercadopago.sql, supabase/migracion-tienda.sql, supabase/migracion-categorias.sql y supabase/migracion-ventas.sql. En una base nueva alcanza con schema.sql.
 
-Seguridad: cada página tiene una política de contenido (Content-Security-Policy) que nombra el proyecto de Supabase. Si cambia el proyecto, hay que actualizar esa dirección en las seis páginas. Si se actualiza Bootstrap, Font Awesome o Supabase, hay que recalcular los valores integrity.
+Seguridad: cada página tiene una política de contenido (Content-Security-Policy) que nombra el proyecto de Supabase. Si cambia el proyecto, hay que actualizar esa dirección en las diez páginas. Si se actualiza Bootstrap, Font Awesome o Supabase, hay que recalcular los valores integrity.
 
 Stock: el pedido descuenta las unidades al crearse y cancelar lo devuelve. Con dominio propio, cambiar el <base> de 404.html y las direcciones og: de index.html.
 
-Mercado Pago: el pago directo usa las funciones de supabase/functions. Se instalan en Supabase con "Verify JWT" desactivado, con los secretos MP_ACCESS_TOKEN y MP_WEBHOOK_SECRET, y se activa con mercadoPago: true en scripts/supabase-config.js. El token de Mercado Pago nunca va en el código.
+Datos de la tienda: el número de WhatsApp, cómo se muestra, el horario de atención y la guía de talles se cambian en un solo lugar, scripts/tienda-config.js. Todas las páginas toman el número de ahí.
 
-Cuentas del panel: los costos y gastos son privados. Las ganancias se calculan con pedidos pagados o entregados, usando el costo que tenía cada producto al venderse.
+Formas de pago: Mercado Pago (pagar ahora), link de pago de Mercado Pago (para pagar después o compartirlo), transferencia con alias y efectivo al recibir. En los dos de Mercado Pago el monto del pedido ya viene cargado y el pago se marca solo en el panel. En la transferencia se muestran el monto exacto y el alias para copiar. El alias, el titular de la cuenta y el porcentaje de descuento se cambian en PAYMENT_CONFIG, al principio de scripts/carrito.js. Mientras Mercado Pago no esté activado, la opción de link no aparece y "Mercado Pago" avisa que el link se manda por WhatsApp.
+
+Activar Mercado Pago (una sola vez). El token de Mercado Pago nunca va en el código.
+
+1. En mercadopago.com.ar/developers, entrar a "Tus integraciones" y crear una aplicación de tipo "Pagos online" con Checkout Pro.
+2. En la aplicación, "Credenciales de producción": copiar el Access Token (empieza con APP_USR-).
+3. En Supabase, Edge Functions: crear la función crear-pago pegando el código de supabase/functions/crear-pago/index.ts, y la función webhook-mercadopago con supabase/functions/webhook-mercadopago/index.ts. En las dos, desactivar "Verify JWT".
+4. En Supabase, Edge Functions > Secrets: agregar MP_ACCESS_TOKEN con el token del paso 2, y SITE_URL con la dirección pública de la tienda (por ejemplo https://ayustizz.github.io/ecommerce-movea, sin barra al final).
+5. En la aplicación de Mercado Pago, "Webhooks": poner la URL https://ID-DEL-PROYECTO.supabase.co/functions/v1/webhook-mercadopago, marcar el evento "Pagos" y guardar. Copiar la "clave secreta" que aparece y agregarla en Supabase como secreto MP_WEBHOOK_SECRET.
+6. En scripts/supabase-config.js, cambiar mercadoPago: false por mercadoPago: true y publicar la tienda.
+7. Probar con una compra chica real y verificar que en el panel, Ventas, el pedido pase solo a "Pagado".
+
+Para probar sin cobrar se pueden usar primero las credenciales de prueba de Mercado Pago (paso 2) con un usuario comprador de prueba, y después cambiar MP_ACCESS_TOKEN por el de producción.
+
+Cuentas del panel: los costos y gastos son privados. Las ganancias se calculan con pedidos pagados (estén entregados o no), usando el costo que tenía cada producto al venderse.
 
 Con Supabase activo, los precios se cambian en el panel. Los productos escritos en index.html y Pages/productos.html quedan como respaldo si Supabase no responde.
+
+Categorías: se crean y eliminan en la pestaña Categorías del panel, con subcategorías opcionales (por ejemplo Push up dentro de Shorts). Una categoría con productos no se puede eliminar: primero hay que cambiarles la categoría.

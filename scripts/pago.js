@@ -4,7 +4,7 @@
 // Lo que viene en la dirección solo define el mensaje:
 // el pedido se marca como pagado desde el servidor.
 
-const WHATSAPP_NUMBER = "5491157368246";
+// El número de WhatsApp está en scripts/tienda-config.js.
 
 // Misma clave que STORAGE_KEY en scripts/carrito.js
 const STORAGE_KEY = "movea-cart-v2";
@@ -38,8 +38,7 @@ if (isApproved) {
     const message =
         `¡Hola Movea! Pagué mi pedido${orderCode ? ` ${orderCode}` : ""} por Mercado Pago. Quiero coordinar la entrega.`;
 
-    whatsapp.href =
-        `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+    whatsapp.href = window.MOVEA_TIENDA.whatsappUrl(message);
 
     try {
 

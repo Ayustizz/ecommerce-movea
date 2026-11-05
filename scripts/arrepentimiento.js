@@ -1,6 +1,6 @@
 "use strict";
 
-const WHATSAPP_NUMBER = "5491157368246";
+// El número de WhatsApp está en scripts/tienda-config.js.
 
 const regretForm = document.getElementById("regret-form");
 
@@ -15,7 +15,6 @@ regretForm.addEventListener("submit", event => {
     const message =
         `¡Hola Movea! Quiero arrepentirme de mi compra.\n\nNombre: ${name}\nTeléfono: ${phone}\nPedido: ${order}`;
 
-    location.href =
-        `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+    location.href = window.MOVEA_TIENDA.whatsappUrl(message);
 
 });

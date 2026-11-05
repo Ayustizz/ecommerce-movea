@@ -10,13 +10,13 @@
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Movea">
     <meta property="og:title" content="Movea | Ropa deportiva">
-    <meta property="og:description" content="Ropa deportiva para mujeres: buzos, joggings, tops y shorts.">
+    <meta property="og:description" content="Ropa deportiva para mujeres: shorts, calzas, tops y corpiños deportivos.">
     <meta property="og:image" content="https://ayustizz.github.io/ecommerce-movea/img/banners/Banner_inicio.jpg">
     <meta property="og:url" content="https://ayustizz.github.io/ecommerce-movea/">
 
     <meta name="theme-color" content="#311c1c">
 
-    <meta name="description" content="Ropa deportiva para mujeres: buzos, joggings, tops y shorts. Comprá online y coordiná tu pedido por WhatsApp.">
+    <meta name="description" content="Ropa deportiva para mujeres: shorts, calzas, tops y corpiños deportivos. Comprá online y coordiná tu pedido por WhatsApp.">
 
     <link rel="icon" href="./img/favicon.svg" type="image/svg+xml">
 
@@ -100,7 +100,7 @@
 
     <main>
 
-        <h1>Bienvenida a MOVEA</h1>
+        <h1 class="visually-hidden">Movea, ropa deportiva para mujeres</h1>
 
 
         <!-- GALERÍA -->
@@ -199,7 +199,7 @@
 
             <li>
                 <i class="fa-solid fa-tag" aria-hidden="true"></i>
-                <span><strong>15% off</strong> pagando antes de la entrega</span>
+                <span><strong>10% off</strong> con transferencia o Mercado Pago</span>
             </li>
 
             <li>
@@ -223,6 +223,7 @@
             class="product-container"
             data-product-list
             data-catalog="featured"
+            aria-busy="true"
             aria-labelledby="productos-destacados">
 
             <h2 id="productos-destacados">Productos destacados</h2>
@@ -239,7 +240,7 @@
                     <input
                         type="search"
                         data-product-search
-                        placeholder="Ej.: buzo, top, short..."
+                        placeholder="Ej.: calza, top, short..."
                         autocomplete="off">
 
                 </label>
@@ -251,10 +252,14 @@
                     <select data-product-category>
 
                         <option value="">Todas las categorías</option>
-                        <option value="buzos">Buzos</option>
-                        <option value="joggers">Joggers</option>
-                        <option value="tops">Tops</option>
                         <option value="shorts">Shorts</option>
+                        <option value="shorts-push-up" data-parent="shorts">Push up</option>
+                        <option value="shorts-sin-frunce" data-parent="shorts">Sin frunce</option>
+                        <option value="calzas">Calzas</option>
+                        <option value="calzas-rectas" data-parent="calzas">Rectas</option>
+                        <option value="calzas-oxford" data-parent="calzas">Oxford</option>
+                        <option value="tops-deportivos">Tops deportivos</option>
+                        <option value="corpinos-deportivos">Corpiños deportivos</option>
 
                     </select>
 
@@ -269,272 +274,6 @@
             </div>
 
 
-            <!-- PRODUCTO 1 -->
-
-            <article
-                class="product_card"
-                data-category="buzos"
-                data-id="buzo-blanco"
-                data-sizes="S|M|L|XL"
-                data-colors="Blanco"
-                data-name="Buzo blanco"
-                data-price="20000">
-
-                <figure>
-                    <img
-                        src="./img/Img_portadas/Buzo-blanco.png"
-                        alt="Buzo deportivo blanco">
-                </figure>
-
-                <h2>Buzo blanco</h2>
-
-                <p>
-                    Buzo deportivo femenino, cómodo y versátil
-                    para acompañarte antes y después del entrenamiento.
-                </p>
-
-                <div class="product-card__footer">
-
-                    <p class="product-card__price">$20.000</p>
-
-                    <button type="button" class="product-card__order">
-                        <i class="fa-solid fa-cart-plus" aria-hidden="true"></i>
-                        Agregar
-                    </button>
-
-                </div>
-
-            </article>
-
-
-            <!-- PRODUCTO 2 -->
-
-            <article
-                class="product_card"
-                data-category="buzos"
-                data-id="buzo-marron"
-                data-sizes="S|M|L|XL"
-                data-colors="Marrón"
-                data-name="Buzo marrón"
-                data-price="20000">
-
-                <figure>
-                    <img
-                        src="./img/Img_portadas/Buzo-marron.png"
-                        alt="Buzo deportivo marrón">
-                </figure>
-
-                <h2>Buzo marrón</h2>
-
-                <p>
-                    Buzo deportivo femenino, cómodo y versátil
-                    para acompañarte antes y después del entrenamiento.
-                </p>
-
-                <div class="product-card__footer">
-
-                    <p class="product-card__price">$20.000</p>
-
-                    <button type="button" class="product-card__order">
-                        <i class="fa-solid fa-cart-plus" aria-hidden="true"></i>
-                        Agregar
-                    </button>
-
-                </div>
-
-            </article>
-
-
-            <!-- PRODUCTO 3 -->
-
-            <article
-                class="product_card"
-                data-category="joggers"
-                data-id="joggin-negro"
-                data-sizes="S|M|L|XL"
-                data-colors="Negro"
-                data-name="Jogging negro"
-                data-price="17000">
-
-                <figure>
-                    <img
-                        src="./img/Img_portadas/joggin-negro.png"
-                        alt="Jogging deportivo negro">
-                </figure>
-
-                <h2>Jogging negro</h2>
-
-                <p>
-                    Jogging deportivo femenino, cómodo y flexible,
-                    diseñado para acompañarte en tus entrenamientos.
-                </p>
-
-                <div class="product-card__footer">
-
-                    <p class="product-card__price">$17.000</p>
-
-                    <button type="button" class="product-card__order">
-                        <i class="fa-solid fa-cart-plus" aria-hidden="true"></i>
-                        Agregar
-                    </button>
-
-                </div>
-
-            </article>
-
-
-            <!-- PRODUCTO 4 -->
-
-            <article
-                class="product_card"
-                data-category="tops"
-                data-id="top-marron"
-                data-sizes="S|M|L|XL"
-                data-colors="Marrón"
-                data-name="Top marrón"
-                data-price="30000">
-
-                <figure>
-                    <img
-                        src="./img/Img_portadas/top-marron.png"
-                        alt="Top deportivo marrón">
-                </figure>
-
-                <h2>Top marrón</h2>
-
-                <p>
-                    Top deportivo cómodo y ligero, ideal para
-                    entrenamientos y actividades de alto movimiento.
-                </p>
-
-                <div class="product-card__footer">
-
-                    <p class="product-card__price">$30.000</p>
-
-                    <button type="button" class="product-card__order">
-                        <i class="fa-solid fa-cart-plus" aria-hidden="true"></i>
-                        Agregar
-                    </button>
-
-                </div>
-
-            </article>
-
-
-            <!-- PRODUCTO 5 -->
-
-            <article
-                class="product_card"
-                data-category="shorts"
-                data-id="short-rojo"
-                data-sizes="S|M|L|XL"
-                data-colors="Rojo"
-                data-name="Short rojo"
-                data-price="50000">
-
-                <figure>
-                    <img
-                        src="./img/Img_portadas/Shorts_rojo.jpeg"
-                        alt="Short deportivo rojo">
-                </figure>
-
-                <h2>Short rojo</h2>
-
-                <p>
-                    Short deportivo liviano y cómodo para moverte
-                    con libertad durante tus entrenamientos.
-                </p>
-
-                <div class="product-card__footer">
-
-                    <p class="product-card__price">$50.000</p>
-
-                    <button type="button" class="product-card__order">
-                        <i class="fa-solid fa-cart-plus" aria-hidden="true"></i>
-                        Agregar
-                    </button>
-
-                </div>
-
-            </article>
-
-
-            <!-- PRODUCTO 6 -->
-
-            <article
-                class="product_card"
-                data-category="shorts"
-                data-id="short-negro-azul"
-                data-sizes="S|M|L|XL"
-                data-colors="Negro y azul"
-                data-name="Short negro y azul"
-                data-price="20000">
-
-                <figure>
-                    <img
-                        src="./img/Img_portadas/Shorts_negro_y_azul.jpeg"
-                        alt="Short deportivo negro y azul">
-                </figure>
-
-                <h2>Short negro y azul</h2>
-
-                <p>
-                    Short deportivo versátil, pensado para
-                    acompañarte en tus actividades y entrenamientos.
-                </p>
-
-                <div class="product-card__footer">
-
-                    <p class="product-card__price">$20.000</p>
-
-                    <button type="button" class="product-card__order">
-                        <i class="fa-solid fa-cart-plus" aria-hidden="true"></i>
-                        Agregar
-                    </button>
-
-                </div>
-
-            </article>
-
-
-            <!-- PRODUCTO 7 -->
-
-            <article
-                class="product_card"
-                data-category="shorts"
-                data-id="short-azul-marron"
-                data-sizes="S|M|L|XL"
-                data-colors="Azul claro y marrón"
-                data-name="Short azul claro y marrón"
-                data-price="30000">
-
-                <figure>
-                    <img
-                        src="./img/Img_portadas/Shorts_azulclaro_y_marron.jpeg"
-                        alt="Short deportivo azul claro y marrón">
-                </figure>
-
-                <h2>Short azul claro y marrón</h2>
-
-                <p>
-                    Short deportivo cómodo y práctico, con una
-                    combinación de colores ideal para tus días activos.
-                </p>
-
-                <div class="product-card__footer">
-
-                    <p class="product-card__price">$30.000</p>
-
-                    <button type="button" class="product-card__order">
-                        <i class="fa-solid fa-cart-plus" aria-hidden="true"></i>
-                        Agregar
-                    </button>
-
-                </div>
-
-            </article>
-
-
             <!-- MENSAJE DE FILTROS VACÍOS -->
 
             <p
@@ -546,6 +285,45 @@
                 Probá con otra búsqueda.
 
             </p>
+
+        </section>
+
+
+        <!-- VER TODO -->
+
+        <div class="home-more">
+            <a href="./Pages/productos.html" class="home-more__link">
+                Ver todos los productos
+                <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+            </a>
+        </div>
+
+
+        <!-- CATEGORÍAS (se arman con las del panel) -->
+
+        <section class="home-categories" data-category-section aria-labelledby="categorias-titulo" hidden>
+
+            <h2 id="categorias-titulo">Comprá por categoría</h2>
+
+            <div class="category-tiles" data-category-tiles></div>
+
+        </section>
+
+
+        <!-- INSTAGRAM -->
+
+        <section class="instagram-cta" aria-labelledby="instagram-titulo">
+
+            <i class="fa-brands fa-instagram" aria-hidden="true"></i>
+
+            <div>
+                <h2 id="instagram-titulo">Seguinos en Instagram</h2>
+                <p>Novedades, looks y lanzamientos antes que nadie.</p>
+            </div>
+
+            <a href="https://www.instagram.com/moveafitt/" target="_blank" rel="noopener noreferrer" class="instagram-cta__link">
+                @moveafitt
+            </a>
 
         </section>
 
@@ -607,6 +385,8 @@
         <span>Subtotal</span>
         <strong id="cart-total">$0</strong>
     </div>
+
+    <p id="cart-saving" class="cart-saving" hidden></p>
 
     <p id="cart-pending" class="cart-pending" hidden>
         Algunos productos tienen precio pendiente de confirmación.
@@ -791,10 +571,30 @@
 
                 <span class="payment-option-content">
 
-                    <strong>Mercado Pago</strong>
+                    <strong>Pagar ahora con Mercado Pago</strong>
 
                     <span class="payment-discount">
-                        15% de descuento pagando antes de la entrega
+                        Tarjeta, débito o dinero en cuenta · 10% de descuento
+                    </span>
+
+                </span>
+
+            </label>
+
+
+            <label class="payment-option" data-payment-link hidden>
+
+                <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="link">
+
+                <span class="payment-option-content">
+
+                    <strong>Link de pago de Mercado Pago</strong>
+
+                    <span class="payment-discount">
+                        Con el monto ya cargado, para pagar cuando quieras · 10% de descuento
                     </span>
 
                 </span>
@@ -811,10 +611,10 @@
 
                 <span class="payment-option-content">
 
-                    <strong>Transferencia bancaria</strong>
+                    <strong>Transferencia con alias</strong>
 
                     <span class="payment-discount">
-                        15% de descuento pagando antes de la entrega
+                        10% de descuento pagando por transferencia
                     </span>
 
                 </span>
@@ -862,7 +662,7 @@
             </div>
 
             <div id="checkout-discount-row">
-                <span>Descuento (15%)</span>
+                <span id="checkout-discount-label">Descuento</span>
                 <strong id="checkout-discount">-$0</strong>
             </div>
 
@@ -927,9 +727,9 @@
 
                 <div id="order-done-proof" class="payment-info" hidden>
 
-                    <strong>Enviá tu comprobante</strong>
+                    <strong id="order-done-proof-title">Enviá tu comprobante</strong>
 
-                    <p>
+                    <p id="order-done-proof-text">
                         Cuando hagas el pago, mandanos el comprobante por el mismo
                         chat de WhatsApp. Tu pedido se confirma al verificarlo.
                     </p>
@@ -990,7 +790,18 @@
 
                 </a>
 
+                <a href="https://wa.me/5491151227752" data-whatsapp="" target="_blank" rel="noopener noreferrer" aria-label="Movea en WhatsApp">
+                    <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
+                </a>
+
             </div>
+
+            <h2 class="footer-pagos-titulo">Medios de pago</h2>
+            <ul class="footer-pagos">
+                <li><i class="fa-solid fa-credit-card" aria-hidden="true"></i> Mercado Pago</li>
+                <li><i class="fa-solid fa-building-columns" aria-hidden="true"></i> Transferencia</li>
+                <li><i class="fa-solid fa-money-bill-wave" aria-hidden="true"></i> Efectivo</li>
+            </ul>
 
         </section>
 
@@ -1079,12 +890,19 @@
 
             <p id="product-dialog-price" class="product-dialog__price"></p>
 
+            <p id="product-dialog-prepaid" class="product-dialog__prepaid" hidden></p>
+
             <p id="product-dialog-description" class="product-dialog__description"></p>
 
             <fieldset id="product-dialog-sizes" class="product-options">
                 <legend>Talle</legend>
                 <div class="product-options__list"></div>
             </fieldset>
+
+            <details id="product-size-guide" class="size-guide" hidden>
+                <summary><i class="fa-solid fa-ruler" aria-hidden="true"></i> ¿Qué talle soy?</summary>
+                <div class="size-guide__content"></div>
+            </details>
 
             <fieldset id="product-dialog-colors" class="product-options">
                 <legend>Color</legend>
@@ -1116,6 +934,20 @@
                 Agregar al carrito
             </button>
 
+            <div class="product-dialog__extra">
+
+                <a id="product-dialog-whatsapp" class="product-dialog__link" target="_blank" rel="noopener noreferrer">
+                    <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
+                    Consultar por WhatsApp
+                </a>
+
+                <button type="button" id="product-dialog-share" class="product-dialog__link">
+                    <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>
+                    <span>Compartir</span>
+                </button>
+
+            </div>
+
         </form>
 
     </dialog>
@@ -1139,6 +971,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 
     <!-- Productos y banners del panel -->
+    <script src="./scripts/tienda-config.js"></script>
+
     <script src="./scripts/supabase-config.js"></script>
     <script src="./scripts/banners.js"></script>
     <script src="./scripts/catalogo.js"></script>

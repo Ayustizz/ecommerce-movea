@@ -25,11 +25,21 @@ const ORDERS_LIMIT = 1000;
 
 const siteRoot = new URL("../", location.href);
 
+// status es solo el pago; la entrega va en "delivered".
+
 const STATUS_NAMES = {
-    pendiente: "Pendiente",
+    pendiente: "Pendiente de pago",
     pagado: "Pagado",
-    entregado: "Entregado",
     cancelado: "Cancelado"
+};
+
+const ORDER_FILTERS = {
+    "por-cobrar": order => order.status === "pendiente",
+    "por-entregar": order => order.status !== "cancelado" && !order.delivered,
+    "pagado-sin-entregar": order => order.status === "pagado" && !order.delivered,
+    "entregado-sin-cobrar": order => order.status === "pendiente" && order.delivered,
+    completado: order => order.status === "pagado" && order.delivered,
+    cancelado: order => order.status === "cancelado"
 };
 
 const PAYMENT_NAMES = {
@@ -61,13 +71,6 @@ const MP_STATUS_NAMES = {
     monto_incorrecto: "Atención: el importe pagado no coincide con el pedido."
 };
 
-const CATEGORY_NAMES = {
-    buzos: "Buzos",
-    joggers: "Joggers",
-    tops: "Tops",
-    shorts: "Shorts"
-};
-
 
 // ==========================================
 // 2. ELEMENTOS DEL DOM
@@ -89,6 +92,8 @@ const tabProducts = document.getElementById("tab-products");
 const tabOrders = document.getElementById("tab-orders");
 const tabAccounts = document.getElementById("tab-accounts");
 const tabBanners = document.getElementById("tab-banners");
+const tabCategories = document.getElementById("tab-categories");
+const viewCategories = document.getElementById("view-categories");
 const viewBanners = document.getElementById("view-banners");
 const viewProducts = document.getElementById("view-products");
 const viewOrders = document.getElementById("view-orders");
@@ -117,6 +122,9 @@ const productCancel = document.getElementById("product-cancel");
 const productSave = document.getElementById("product-save");
 const productsList = document.getElementById("products-list");
 const productsCount = document.getElementById("products-count");
+const productsSearch = document.getElementById("products-search");
+const productsCategoryFilter = document.getElementById("products-category-filter");
+const adminUser = document.getElementById("admin-user");
 
 const ordersFilter = document.getElementById("orders-filter");
 const ordersList = document.getElementById("orders-list");
@@ -124,9 +132,20 @@ const ordersCount = document.getElementById("orders-count");
 const statMonth = document.getElementById("stat-month");
 const statPending = document.getElementById("stat-pending");
 const statCount = document.getElementById("stat-count");
+const statPendingAmount = document.getElementById("stat-pending-amount");
+const statUndelivered = document.getElementById("stat-undelivered");
+const statDone = document.getElementById("stat-done");
+const ordersSearch = document.getElementById("orders-search");
 
 const ordersExport = document.getElementById("orders-export");
 const expensesExport = document.getElementById("expenses-export");
+
+const categoryForm = document.getElementById("category-form");
+const categoryName = document.getElementById("category-name");
+const categoryParent = document.getElementById("category-parent");
+const categoryError = document.getElementById("category-error");
+const categorySave = document.getElementById("category-save");
+const categoriesList = document.getElementById("categories-list");
 
 const bannerForm = document.getElementById("banner-form");
 const bannerImage = document.getElementById("banner-image");
@@ -166,6 +185,7 @@ const client = config && config.url && config.anonKey
     : null;
 
 let products = [];
+let categories = [];
 let productCosts = new Map();
 let productStock = new Map();
 let orders = [];
@@ -231,16 +251,20 @@ function createText(tag, text, className) {
 
 }
 
-function createProductId(name) {
+function createSlug(name) {
 
-    const slug = name
+    return name
         .normalize("NFD")
         .replace(/[̀-ͯ]/g, "")
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-|-$/g, "");
 
-    return `${slug || "producto"}-${Date.now().toString(36)}`;
+}
+
+function createProductId(name) {
+
+    return `${createSlug(name) || "producto"}-${Date.now().toString(36)}`;
 
 }
 
@@ -328,7 +352,11 @@ async function openPanelForUser(user) {
 
     showScreen(adminPanel);
 
-    await Promise.all([loadProducts(), loadOrders()]);
+    adminUser.textContent = user.email;
+
+    // Las categorías van primero: los productos muestran su nombre.
+
+    await Promise.all([loadCategories().then(loadProducts), loadOrders()]);
 
 }
 
@@ -365,6 +393,7 @@ adminLogout.addEventListener("click", async () => {
     await client.auth.signOut();
 
     products = [];
+    categories = [];
     productCosts = new Map();
     productStock = new Map();
     orders = [];
@@ -372,6 +401,11 @@ adminLogout.addEventListener("click", async () => {
     monthExpenses = [];
 
     bannersList.replaceChildren();
+    categoriesList.replaceChildren();
+    adminUser.textContent = "";
+    productsSearch.value = "";
+    productsCategoryFilter.value = "";
+    ordersSearch.value = "";
     productsList.replaceChildren();
     ordersList.replaceChildren();
     accountProducts.replaceChildren();
@@ -394,6 +428,7 @@ function selectTab(tab) {
 
     [
         [tabProducts, viewProducts],
+        [tabCategories, viewCategories],
         [tabOrders, viewOrders],
         [tabAccounts, viewAccounts],
         [tabBanners, viewBanners]
@@ -414,9 +449,14 @@ function selectTab(tab) {
         loadBanners();
     }
 
+    if (tab === tabCategories) {
+        renderCategories();
+    }
+
 }
 
 tabProducts.addEventListener("click", () => selectTab(tabProducts));
+tabCategories.addEventListener("click", () => selectTab(tabCategories));
 tabOrders.addEventListener("click", () => selectTab(tabOrders));
 tabAccounts.addEventListener("click", () => selectTab(tabAccounts));
 tabBanners.addEventListener("click", () => selectTab(tabBanners));
@@ -544,7 +584,9 @@ function createProductRow(product) {
     badges.className = "admin-badges";
 
     badges.append(
-        createText("span", CATEGORY_NAMES[product.category], "admin-badge")
+        product.category
+            ? createText("span", getCategoryName(product.category), "admin-badge")
+            : createText("span", "Sin categoría", "admin-badge admin-badge--off")
     );
 
     if (product.featured) {
@@ -604,14 +646,57 @@ function createProductRow(product) {
 
 }
 
-function renderProducts() {
+function normalizeSearch(value) {
 
-    productsList.replaceChildren(...products.map(createProductRow));
-
-    productsCount.textContent =
-        `${products.length} ${products.length === 1 ? "producto" : "productos"}`;
+    return value
+        .normalize("NFD")
+        .replace(/[̀-ͯ]/g, "")
+        .toLowerCase();
 
 }
+
+// Una categoría principal también muestra los productos de sus subcategorías
+
+function matchesCategoryFilter(product, filter) {
+
+    if (!filter) return true;
+
+    if (filter === "none") return !product.category;
+
+    const category = categories.find(item => item.slug === product.category);
+
+    return product.category === filter || Boolean(category && category.parent_slug === filter);
+
+}
+
+function renderProducts() {
+
+    const searchTerm = normalizeSearch(productsSearch.value.trim());
+    const filter = productsCategoryFilter.value;
+
+    const visibleProducts = products.filter(product => {
+        return normalizeSearch(product.name).includes(searchTerm)
+            && matchesCategoryFilter(product, filter);
+    });
+
+    productsList.replaceChildren(...visibleProducts.map(createProductRow));
+
+    if (products.length > 0 && visibleProducts.length === 0) {
+
+        productsList.append(
+            createText("p", "Ningún producto coincide con la búsqueda.", "product-filter__empty")
+        );
+
+    }
+
+    productsCount.textContent = visibleProducts.length === products.length
+        ? `${products.length} ${products.length === 1 ? "producto" : "productos"}`
+        : `${visibleProducts.length} de ${products.length} productos`;
+
+}
+
+productsSearch.addEventListener("input", renderProducts);
+productsCategoryFilter.addEventListener("change", renderProducts);
 
 
 // ==========================================
@@ -752,7 +837,7 @@ function openProductForm(product = null) {
 
         productName.value = product.name;
         productDescription.value = product.description;
-        productCategory.value = product.category;
+        productCategory.value = product.category ?? "";
         productPrice.value = product.price;
         productCost.value = productCosts.get(product.id) ?? "";
         productActive.checked = product.active;
@@ -1034,64 +1119,143 @@ function updateStats() {
         const date = new Date(order.created_at);
 
         return (
-            (order.status === "pagado" || order.status === "entregado") &&
+            order.status === "pagado" &&
             date.getMonth() === now.getMonth() &&
             date.getFullYear() === now.getFullYear()
         );
 
     });
 
-    const monthTotal = monthSales.reduce((total, order) => {
-        return total + order.total;
-    }, 0);
+    const sumTotals = list => list.reduce((total, order) => total + order.total, 0);
 
-    statMonth.textContent = formatPrice(monthTotal);
-    statCount.textContent = monthSales.length;
+    const pendingOrders = orders.filter(ORDER_FILTERS["por-cobrar"]);
 
-    statPending.textContent = orders.filter(order => {
-        return order.status === "pendiente";
-    }).length;
+    statMonth.textContent = formatPrice(sumTotals(monthSales));
+    statCount.textContent = `${monthSales.length} ${monthSales.length === 1 ? "venta" : "ventas"}`;
+
+    statPending.textContent = pendingOrders.length;
+    statPendingAmount.textContent = pendingOrders.length > 0
+        ? `${formatPrice(sumTotals(pendingOrders))} en total`
+        : "Nada pendiente";
+
+    statUndelivered.textContent = orders.filter(ORDER_FILTERS["por-entregar"]).length;
+    statDone.textContent = orders.filter(ORDER_FILTERS.completado).length;
 
 }
 
-async function changeOrderStatus(order, status, select) {
+async function updateOrder(order, changes) {
+
+    showError(adminMessage, "");
 
     const { error } = await client
         .from("orders")
-        .update({ status })
+        .update(changes)
         .eq("id", order.id);
 
     if (error) {
 
-        console.error("Error al cambiar el estado:", error);
-
-        select.value = order.status;
+        console.error("Error al actualizar el pedido:", error);
 
         showError(
             adminMessage,
             /Sin stock/.test(error.message)
                 ? "No hay stock suficiente para reactivar este pedido."
-                : "No se pudo cambiar el estado del pedido."
+                : "No se pudo actualizar el pedido."
         );
+
+        renderOrders();
 
         return;
 
     }
 
-    order.status = status;
+    Object.assign(order, changes);
 
     renderOrders();
 
     // Cancelar o reactivar cambia el stock.
 
-    await loadProducts();
+    if ("status" in changes) {
+        await loadProducts();
+    }
+
+}
+
+async function deleteOrder(order) {
+
+    showError(adminMessage, "");
+
+    const { error } = await client
+        .from("orders")
+        .delete()
+        .eq("id", order.id);
+
+    if (error) {
+
+        console.error("Error al eliminar el pedido:", error);
+
+        showError(adminMessage, "No se pudo eliminar el pedido.");
+
+        return;
+
+    }
+
+    orders = orders.filter(item => item !== order);
+
+    renderOrders();
+
+    // Si no estaba cancelado, el stock vuelve a estar disponible.
+
+    if (order.status !== "cancelado") {
+        await loadProducts();
+    }
+
+}
+
+function getOrderStage(order) {
+
+    if (order.status === "cancelado") return "cancelado";
+
+    if (order.status === "pagado" && order.delivered) return "completado";
+
+    return order.status === "pagado" || order.delivered ? "en-curso" : "pendiente";
+
+}
+
+// Interruptor de pago o entrega: un clic cambia entre los dos estados.
+
+function createOrderToggle(label, onText, offText, isOn, disabled, onClick) {
+
+    const button = document.createElement("button");
+
+    button.type = "button";
+    button.className = "admin-toggle";
+    button.disabled = disabled;
+    button.setAttribute("aria-pressed", String(isOn));
+
+    const icon = document.createElement("i");
+    icon.className = `fa-solid ${isOn ? "fa-circle-check" : "fa-circle"}`;
+    icon.setAttribute("aria-hidden", "true");
+
+    button.append(
+        icon,
+        createText("span", label, "admin-toggle__label"),
+        createText("strong", isOn ? onText : offText)
+    );
+
+    button.addEventListener("click", () => {
+        button.disabled = true;
+        onClick();
+    });
+
+    return button;
 
 }
 
 function createOrderCard(order) {
 
     const card = document.createElement("article");
-    card.className = `admin-order admin-order--${order.status}`;
+    card.className = `admin-order admin-order--${getOrderStage(order)}`;
 
     const header = document.createElement("div");
     header.className = "admin-order__header";
@@ -1115,22 +1279,15 @@ function createOrderCard(order) {
 
     }
 
-    const select = document.createElement("select");
+    const total = document.createElement("div");
+    total.className = "admin-order__total";
 
-    select.className = "admin-order__status";
-    select.setAttribute("aria-label", `Estado del pedido ${order.code}`);
+    total.append(
+        createText("strong", formatPrice(order.total)),
+        createText("span", PAYMENT_NAMES[order.payment_method])
+    );
 
-    Object.entries(STATUS_NAMES).forEach(([value, name]) => {
-        select.add(new Option(name, value));
-    });
-
-    select.value = order.status;
-
-    select.addEventListener("change", () => {
-        changeOrderStatus(order, select.value, select);
-    });
-
-    header.append(heading, select);
+    header.append(heading, total);
 
     const items = document.createElement("ul");
     items.className = "admin-order__items";
@@ -1147,13 +1304,75 @@ function createOrderCard(order) {
 
     });
 
+    const isCancelled = order.status === "cancelado";
+
+    const toggles = document.createElement("div");
+    toggles.className = "admin-order__toggles";
+
+    if (isCancelled) {
+
+        toggles.append(createText("span", "Pedido cancelado", "admin-badge admin-badge--danger"));
+
+    } else {
+
+        toggles.append(
+            createOrderToggle("Pago", "Pagado", "Pendiente", order.status === "pagado", false, () => {
+                updateOrder(order, { status: order.status === "pagado" ? "pendiente" : "pagado" });
+            }),
+            createOrderToggle("Entrega", "Entregado", "Sin entregar", order.delivered, false, () => {
+                updateOrder(order, { delivered: !order.delivered });
+            })
+        );
+
+    }
+
+    const actions = document.createElement("div");
+    actions.className = "admin-order__actions";
+
+    const cancelButton = createButton(
+        isCancelled ? "Reactivar" : "Cancelar pedido",
+        "admin-link",
+        () => {
+
+            if (!isCancelled && !cancelButton.dataset.confirm) {
+
+                cancelButton.dataset.confirm = "true";
+                cancelButton.textContent = "¿Cancelar? Devuelve el stock";
+
+                return;
+
+            }
+
+            cancelButton.disabled = true;
+
+            updateOrder(order, { status: isCancelled ? "pendiente" : "cancelado" });
+
+        }
+    );
+
+    const deleteButton = createButton("Eliminar", "admin-link admin-link--danger", () => {
+
+        if (deleteButton.dataset.confirm) {
+
+            deleteButton.disabled = true;
+
+            deleteOrder(order);
+
+            return;
+
+        }
+
+        deleteButton.dataset.confirm = "true";
+        deleteButton.textContent = "¿Eliminar para siempre?";
+
+    });
+
+    actions.append(cancelButton, deleteButton);
+
     const footer = document.createElement("div");
     footer.className = "admin-order__footer";
 
-    footer.append(
-        createText("span", PAYMENT_NAMES[order.payment_method]),
-        createText("strong", formatPrice(order.total))
-    );
+    footer.append(toggles, actions);
 
     card.append(header, items);
 
@@ -1211,11 +1430,18 @@ function renderOrders() {
 
     updateStats();
 
-    const status = ordersFilter.value;
+    const filter = ORDER_FILTERS[ordersFilter.value] ?? (() => true);
+    const searchTerm = normalizeSearch(ordersSearch.value.trim());
 
-    const visibleOrders = status
-        ? orders.filter(order => order.status === status)
-        : orders;
+    const visibleOrders = orders.filter(order => {
+
+        const text = normalizeSearch(
+            `${order.code} ${order.customer_name} ${order.customer_phone}`
+        );
+
+        return filter(order) && text.includes(searchTerm);
+
+    });
 
     ordersList.replaceChildren(...visibleOrders.map(createOrderCard));
 
@@ -1229,6 +1455,7 @@ function renderOrders() {
 }
 
 ordersFilter.addEventListener("change", renderOrders);
+ordersSearch.addEventListener("input", renderOrders);
 
 
 // Descargas para Excel
@@ -1267,7 +1494,7 @@ function downloadCsv(fileName, rows) {
 ordersExport.addEventListener("click", () => {
 
     downloadCsv("ventas-movea.csv", [
-        ["Pedido", "Fecha", "Cliente", "Teléfono", "Productos", "Entrega", "Zona", "Pago", "Estado", "Total"],
+        ["Pedido", "Fecha", "Cliente", "Teléfono", "Productos", "Entrega", "Zona", "Pago", "Estado del pago", "Entregado", "Total"],
         ...orders.map(order => [
             order.code,
             formatDate(order.created_at),
@@ -1280,6 +1507,7 @@ ordersExport.addEventListener("click", () => {
             order.delivery_zone,
             PAYMENT_NAMES[order.payment_method],
             STATUS_NAMES[order.status],
+            order.delivered ? "Sí" : "No",
             order.total
         ])
     ]);
@@ -1512,7 +1740,7 @@ async function loadAccounts() {
         client
             .from("orders")
             .select("subtotal, total, order_items(product_id, name, unit_price, unit_cost, quantity)")
-            .in("status", ["pagado", "entregado"])
+            .eq("status", "pagado")
             .gte("created_at", range.start.toISOString())
             .lt("created_at", range.end.toISOString()),
         client
@@ -1834,7 +2062,266 @@ bannerForm.addEventListener("submit", async event => {
 
 
 // ==========================================
-// 13. INICIALIZAR
+// 13. CATEGORÍAS
+// ==========================================
+
+function getCategoryName(slug) {
+
+    const category = categories.find(item => item.slug === slug);
+
+    if (!category) return slug;
+
+    const parent = categories.find(item => item.slug === category.parent_slug);
+
+    return parent ? `${parent.name} › ${category.name}` : category.name;
+
+}
+
+// Principales y, debajo de cada una, sus subcategorías
+
+function getOrderedCategories() {
+
+    return categories
+        .filter(category => !category.parent_slug)
+        .flatMap(parent => [
+            parent,
+            ...categories.filter(category => category.parent_slug === parent.slug)
+        ]);
+
+}
+
+function fillCategorySelects() {
+
+    const selectedCategory = productCategory.value;
+    const selectedParent = categoryParent.value;
+    const selectedFilter = productsCategoryFilter.value;
+
+    [productCategory, productsCategoryFilter].forEach(select => {
+
+        select.replaceChildren(
+            select.options[0],
+            ...getOrderedCategories().map(category => {
+                return new Option(getCategoryName(category.slug), category.slug);
+            })
+        );
+
+    });
+
+    productsCategoryFilter.append(new Option("Sin categoría", "none"));
+    productsCategoryFilter.value = selectedFilter;
+
+    categoryParent.replaceChildren(
+        categoryParent.options[0],
+        ...categories
+            .filter(category => !category.parent_slug)
+            .map(category => new Option(category.name, category.slug))
+    );
+
+    productCategory.value = selectedCategory;
+    categoryParent.value = selectedParent;
+
+}
+
+async function loadCategories() {
+
+    const { data, error } = await client
+        .from("categories")
+        .select("*")
+        .order("sort_order")
+        .order("created_at");
+
+    if (error) {
+
+        console.error("Error al cargar categorías:", error);
+
+        showError(adminMessage, "No se pudieron cargar las categorías.");
+
+        return;
+
+    }
+
+    categories = data;
+
+    fillCategorySelects();
+    renderCategories();
+
+}
+
+function countCategoryProducts(category) {
+
+    const slugs = [
+        category.slug,
+        ...categories
+            .filter(item => item.parent_slug === category.slug)
+            .map(item => item.slug)
+    ];
+
+    return products.filter(product => slugs.includes(product.category)).length;
+
+}
+
+async function deleteCategory(category) {
+
+    const productCount = countCategoryProducts(category);
+
+    if (productCount > 0) {
+
+        showError(
+            adminMessage,
+            `"${category.name}" tiene ${productCount} ${productCount === 1 ? "producto" : "productos"}. Cambiales la categoría antes de eliminarla.`
+        );
+
+        return;
+
+    }
+
+    // Borra también sus subcategorías.
+
+    const { error } = await client
+        .from("categories")
+        .delete()
+        .eq("slug", category.slug);
+
+    if (error) {
+
+        console.error("Error al eliminar la categoría:", error);
+
+        showError(adminMessage, "No se pudo eliminar la categoría.");
+
+        return;
+
+    }
+
+    showError(adminMessage, "");
+
+    await loadCategories();
+
+}
+
+function createCategoryRow(category) {
+
+    const row = document.createElement("article");
+    row.className = "admin-expense";
+
+    if (category.parent_slug) {
+        row.classList.add("admin-category--sub");
+    }
+
+    const info = document.createElement("div");
+
+    const productCount = countCategoryProducts(category);
+
+    const children = categories.filter(item => item.parent_slug === category.slug);
+
+    const details = [
+        `${productCount} ${productCount === 1 ? "producto" : "productos"}`,
+        children.length > 0 && `${children.length} ${children.length === 1 ? "subcategoría" : "subcategorías"}`
+    ].filter(Boolean).join(" · ");
+
+    info.append(
+        createText("h3", category.name),
+        createText("p", details)
+    );
+
+    const deleteButton = createButton("Eliminar", "admin-link admin-link--danger", () => {
+
+        if (deleteButton.dataset.confirm) {
+
+            deleteCategory(category);
+
+            return;
+
+        }
+
+        deleteButton.dataset.confirm = "true";
+        deleteButton.textContent = children.length > 0
+            ? "¿Confirmar? También se borran sus subcategorías"
+            : "¿Confirmar?";
+
+    });
+
+    row.append(info, deleteButton);
+
+    return row;
+
+}
+
+function renderCategories() {
+
+    categoriesList.replaceChildren(...getOrderedCategories().map(createCategoryRow));
+
+    if (categories.length === 0) {
+
+        categoriesList.append(
+            createText("p", "Todavía no hay categorías.", "product-filter__empty")
+        );
+
+    }
+
+}
+
+categoryForm.addEventListener("submit", async event => {
+
+    event.preventDefault();
+
+    showError(categoryError, "");
+
+    const name = categoryName.value.trim();
+    const parentSlug = categoryParent.value || null;
+    const slug = [parentSlug, createSlug(name)].filter(Boolean).join("-");
+
+    if (!createSlug(name)) {
+
+        showError(categoryError, "El nombre tiene que tener letras o números.");
+
+        return;
+
+    }
+
+    if (categories.some(category => category.slug === slug)) {
+
+        showError(categoryError, "Ya existe una categoría con ese nombre.");
+
+        return;
+
+    }
+
+    const siblings = categories.filter(category => category.parent_slug === parentSlug);
+
+    const sortOrder = siblings.reduce((max, category) => {
+        return Math.max(max, category.sort_order);
+    }, 0) + 1;
+
+    categorySave.disabled = true;
+
+    const { error } = await client.from("categories").insert({
+        slug,
+        name,
+        parent_slug: parentSlug,
+        sort_order: sortOrder
+    });
+
+    categorySave.disabled = false;
+
+    if (error) {
+
+        console.error("Error al guardar la categoría:", error);
+
+        showError(categoryError, "No se pudo guardar la categoría. Probá de nuevo.");
+
+        return;
+
+    }
+
+    categoryForm.reset();
+
+    await loadCategories();
+
+});
+
+
+// ==========================================
+// 14. INICIALIZAR
 // ==========================================
 
 async function init() {

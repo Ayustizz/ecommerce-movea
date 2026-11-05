@@ -5,23 +5,40 @@
 // 1. CONFIGURACIÓN
 // ==========================================
 
-const WHATSAPP_NUMBER = "5491151227752";
+// El número de WhatsApp está en scripts/tienda-config.js.
 
 const STORAGE_KEY = "movea-cart-v2";
 
-// Datos provisionales: reemplazarlos cuando tengas
-// el link y el alias definitivos de Movea.
+// Raíz del sitio, para las fotos y los enlaces de productos.
+const siteRoot = new URL("../", document.currentScript.src);
 
 const DELIVERY_NAMES = {
-    encuentro: "Punto de encuentro, a coordinar",
-    uber: "Envío por Uber, a coordinar"
+    encuentro: "Punto de encuentro",
+    uber: "Envío a coordinar"
 };
 
+// Datos de cobro del negocio.
+// El pago y el link de Mercado Pago con el monto cargado se crean solos
+// cuando mercadoPago está activo en scripts/supabase-config.js.
+
 const PAYMENT_CONFIG = {
-    // Si queda vacío, el link se envía por WhatsApp.
-    mercadoPagoLink: "https://link.mercadopago.com.ar/amimporta",
     alias: "Martuu.rocio",
-    discount: 15
+    // Nombre del titular de la cuenta, para que el cliente lo verifique antes de transferir.
+    accountHolder: "",
+    // Descuento en % según el medio de pago. Tienen que coincidir con
+    // create_order en supabase/migracion-descuentos.sql.
+    discounts: {
+        "mercado-pago": 10,
+        link: 10,
+        transferencia: 10
+    }
+};
+
+const PAYMENT_NAMES = {
+    "mercado-pago": "Mercado Pago",
+    link: "Link de pago de Mercado Pago",
+    transferencia: "Transferencia con alias",
+    entrega: "Efectivo al momento de la entrega"
 };
 
 
@@ -60,6 +77,7 @@ const checkoutSubtotal = document.getElementById("checkout-subtotal");
 const checkoutDiscount = document.getElementById("checkout-discount");
 const checkoutTotal = document.getElementById("checkout-total");
 const checkoutDiscountRow = document.getElementById("checkout-discount-row");
+const checkoutDiscountLabel = document.getElementById("checkout-discount-label");
 const checkoutPending = document.getElementById("checkout-pending");
 const checkoutError = document.getElementById("checkout-error");
 const checkoutSubmit = document.getElementById("checkout-submit");
@@ -68,6 +86,8 @@ const checkoutSubmitText = document.getElementById("checkout-submit-text");
 const orderDone = document.getElementById("order-done");
 const orderDoneCode = document.getElementById("order-done-code");
 const orderDoneProof = document.getElementById("order-done-proof");
+const orderDoneProofTitle = document.getElementById("order-done-proof-title");
+const orderDoneProofText = document.getElementById("order-done-proof-text");
 const orderDonePayment = document.getElementById("order-done-payment");
 const orderDoneWhatsapp = document.getElementById("order-done-whatsapp");
 const orderDoneFinish = document.getElementById("order-done-finish");
@@ -90,6 +110,13 @@ const productQuantityValue = document.getElementById("product-quantity-value");
 const cartToast = document.getElementById("cart-toast");
 const cartToastText = document.getElementById("cart-toast-text");
 const cartToastOpen = document.getElementById("cart-toast-open");
+
+const cartSaving = document.getElementById("cart-saving");
+
+const sizeGuide = document.getElementById("product-size-guide");
+const productDialogPrepaid = document.getElementById("product-dialog-prepaid");
+const productDialogWhatsapp = document.getElementById("product-dialog-whatsapp");
+const productDialogShare = document.getElementById("product-dialog-share");
 
 
 // ==========================================
@@ -124,6 +151,16 @@ function loadCart() {
                 product.quantity > 0 &&
                 product.quantity <= 99
             );
+
+        }).map(product => {
+
+            // La foto es opcional y solo puede ser una dirección web.
+
+            const image = typeof product.image === "string" && /^(https?|file):/.test(product.image)
+                ? product.image
+                : "";
+
+            return { ...product, image };
 
         });
 
@@ -168,13 +205,11 @@ function saveCart() {
 // 5. FORMATEAR PRECIOS
 // ==========================================
 
+// Mismo formato que las tarjetas de producto: $50.000
+
 function formatPrice(price) {
 
-    return price.toLocaleString("es-AR", {
-        style: "currency",
-        currency: "ARS",
-        maximumFractionDigits: 0
-    });
+    return `$${Math.round(price).toLocaleString("es-AR")}`;
 
 }
 
@@ -182,6 +217,13 @@ function formatPrice(price) {
 // ==========================================
 // 6. CALCULAR IMPORTES
 // ==========================================
+
+function getDiscountPercent(paymentMethod) {
+
+    return PAYMENT_CONFIG.discounts[paymentMethod] ?? 0;
+
+}
+
 
 function calculateTotals(paymentMethod = "") {
 
@@ -195,13 +237,8 @@ function calculateTotals(paymentMethod = "") {
         return product.price === 0;
     });
 
-    const isPrepaid =
-        paymentMethod === "mercado-pago" ||
-        paymentMethod === "transferencia";
-
-    const discount = isPrepaid
-        ? Math.round(subtotal * PAYMENT_CONFIG.discount / 100)
-        : 0;
+    const discount =
+        Math.round(subtotal * getDiscountPercent(paymentMethod) / 100);
 
     const total = subtotal - discount;
 
@@ -306,6 +343,7 @@ function getCardProduct(card) {
         price: Number(card.dataset.price),
         sizes: splitOptions(card.dataset.sizes),
         colors: splitOptions(card.dataset.colors),
+        comparePrice: Number(card.dataset.comparePrice) || 0,
         stock: card.dataset.stock ? JSON.parse(card.dataset.stock) : null,
         image: card.querySelector("img").src,
         priceText: card.querySelector(".product-card__price").textContent.trim(),
@@ -443,8 +481,41 @@ function openProductDialog(card) {
     productDialogImage.src = product.image;
     productDialogImage.alt = product.name;
     productDialogName.textContent = product.name;
-    productDialogPrice.textContent = product.priceText;
     productDialogDescription.textContent = product.description;
+
+    productDialogPrice.replaceChildren(product.priceText);
+
+    if (product.comparePrice > product.price) {
+
+        const comparePrice = document.createElement("s");
+
+        comparePrice.classList.add("product-dialog__compare");
+        comparePrice.textContent = formatPrice(product.comparePrice);
+
+        productDialogPrice.prepend(comparePrice, " ");
+
+    }
+
+    const prepaidPercent = PAYMENT_CONFIG.discounts.transferencia;
+
+    productDialogPrepaid.hidden = !(product.price > 0);
+    productDialogPrepaid.textContent =
+        `${formatPrice(product.price - Math.round(product.price * prepaidPercent / 100))} pagando con transferencia o Mercado Pago (${prepaidPercent}% off)`;
+
+    // La guía de talles no aplica a productos de talle único.
+
+    sizeGuide.hidden =
+        !hasSizeGuide() ||
+        product.sizes.length === 0 ||
+        product.sizes.every(size => size === "Único");
+
+    sizeGuide.open = false;
+
+    productDialogWhatsapp.href = window.MOVEA_TIENDA.whatsappUrl(
+        `¡Hola Movea! Quiero consultar por el producto "${product.name}".`
+    );
+
+    productDialogShare.lastElementChild.textContent = "Compartir";
 
     renderProductOptions(productDialogSizes, product.sizes, "productSize");
     renderProductOptions(productDialogColors, product.colors, "productColor");
@@ -474,6 +545,111 @@ document.addEventListener("click", event => {
 
     if (card && !card.classList.contains("is-sold-out")) {
         openProductDialog(card);
+    }
+
+});
+
+
+// Guía de talles: se arma una vez con los datos de scripts/tienda-config.js.
+
+function hasSizeGuide() {
+
+    const guide = window.MOVEA_TIENDA && window.MOVEA_TIENDA.guiaDeTalles;
+
+    return Boolean(guide && guide.filas && guide.filas.length > 0);
+
+}
+
+
+function renderSizeGuide() {
+
+    if (!hasSizeGuide()) return;
+
+    const guide = window.MOVEA_TIENDA.guiaDeTalles;
+
+    const table = document.createElement("table");
+    const head = table.createTHead().insertRow();
+
+    guide.columnas.forEach(column => {
+
+        const cell = document.createElement("th");
+
+        cell.scope = "col";
+        cell.textContent = column;
+
+        head.append(cell);
+
+    });
+
+    const body = table.createTBody();
+
+    guide.filas.forEach(row => {
+
+        const tableRow = body.insertRow();
+
+        row.forEach((value, index) => {
+
+            const cell = document.createElement(index === 0 ? "th" : "td");
+
+            if (index === 0) cell.scope = "row";
+
+            cell.textContent = value;
+            tableRow.append(cell);
+
+        });
+
+    });
+
+    const content = sizeGuide.querySelector(".size-guide__content");
+
+    content.replaceChildren(table);
+
+    if (guide.nota) {
+
+        const note = document.createElement("p");
+
+        note.textContent = guide.nota;
+        content.append(note);
+
+    }
+
+}
+
+renderSizeGuide();
+
+
+// Compartir: abre el menú del celular o copia el enlace.
+
+productDialogShare.addEventListener("click", async () => {
+
+    const url = new URL(`Pages/productos.html?producto=${encodeURIComponent(selectedProduct.id)}`, siteRoot).href;
+
+    try {
+
+        if (navigator.share) {
+
+            await navigator.share({ title: `${selectedProduct.name} | Movea`, url });
+
+            return;
+
+        }
+
+        await navigator.clipboard.writeText(url);
+
+        productDialogShare.lastElementChild.textContent = "¡Enlace copiado!";
+
+    } catch (error) {
+
+        // Cerrar el menú de compartir no es un error.
+
+        if (error.name !== "AbortError") {
+
+            console.error("No se pudo compartir:", error);
+
+            productDialogShare.lastElementChild.textContent = "No se pudo copiar";
+
+        }
+
     }
 
 });
@@ -567,6 +743,7 @@ function addToCart(product, size, color, quantity) {
             size,
             color,
             price: product.price,
+            image: product.image,
             quantity
         });
 
@@ -616,10 +793,14 @@ function showPrepaidPrices() {
         const prepaid = document.createElement("p");
 
         const prepaidPrice =
-            price - Math.round(price * PAYMENT_CONFIG.discount / 100);
+            price - Math.round(price * PAYMENT_CONFIG.discounts.transferencia / 100);
+
+        // Corto para que entre en una línea en el celular.
 
         prepaid.classList.add("product-card__prepaid");
-        prepaid.textContent = `${formatPrice(prepaidPrice)} pagando antes`;
+        prepaid.textContent =
+            `${formatPrice(prepaidPrice)} con ${PAYMENT_CONFIG.discounts.transferencia}% off`;
+        prepaid.title = "Pagando con transferencia o Mercado Pago";
 
         card.querySelector(".product-card__price").after(prepaid);
 
@@ -713,6 +894,21 @@ function createCartItem(product) {
     variant.textContent = getVariantText(product);
 
     info.append(name, variant, price);
+
+    // Los carritos guardados antes de las fotos no tienen imagen.
+
+    if (product.image) {
+
+        const image = document.createElement("img");
+
+        image.src = product.image;
+        image.alt = "";
+        image.classList.add("cart-item-image");
+
+        article.classList.add("cart-item--image");
+        article.append(image);
+
+    }
 
     const actions = document.createElement("div");
     actions.classList.add("cart-item-actions");
@@ -822,6 +1018,15 @@ function updateCartSummary() {
 
     cartPending.hidden = !totals.hasPendingPrices;
 
+    // Cuánto ahorra pagando con transferencia o Mercado Pago.
+
+    const prepaid = calculateTotals("transferencia");
+
+    cartSaving.hidden = prepaid.discount === 0 || totals.hasPendingPrices;
+
+    cartSaving.textContent =
+        `Con transferencia o Mercado Pago pagás ${formatPrice(prepaid.total)} y ahorrás ${formatPrice(prepaid.discount)}.`;
+
     checkoutOpen.disabled = cart.length === 0;
     cartClear.disabled = cart.length === 0;
 
@@ -929,10 +1134,13 @@ function updateCheckoutSummary() {
 
     checkoutTotal.textContent = formatPrice(totals.total);
 
-    // Si elige pago al recibir, no hay descuento.
+    // Cada método tiene su descuento; pagando al recibir no hay.
 
-    checkoutDiscountRow.hidden =
-        paymentMethod === "entrega";
+    const percent = getDiscountPercent(paymentMethod);
+
+    checkoutDiscountLabel.textContent = `Descuento (${percent}%)`;
+
+    checkoutDiscountRow.hidden = percent === 0;
 
     // Aviso por productos sin precio.
 
@@ -949,23 +1157,43 @@ function isPrepaidMethod(paymentMethod) {
 
     return (
         paymentMethod === "mercado-pago" ||
+        paymentMethod === "link" ||
         paymentMethod === "transferencia"
     );
 
 }
 
 
-async function copyAlias(button) {
+// El link es otra forma de pagar con Mercado Pago:
+// en la base el pedido se guarda igual.
+
+function getOrderPaymentMethod(paymentMethod) {
+
+    return paymentMethod === "link" ? "mercado-pago" : paymentMethod;
+
+}
+
+
+function isMercadoPagoEnabled() {
+
+    const config = window.MOVEA_SUPABASE;
+
+    return Boolean(config && config.mercadoPago && isOrderSavingEnabled());
+
+}
+
+
+async function copyText(text, button, doneLabel) {
 
     try {
 
-        await navigator.clipboard.writeText(PAYMENT_CONFIG.alias);
+        await navigator.clipboard.writeText(text);
 
-        button.textContent = "¡Copiado!";
+        button.textContent = doneLabel;
 
     } catch (error) {
 
-        console.error("No se pudo copiar el alias:", error);
+        console.error("No se pudo copiar:", error);
 
         button.textContent = "Copialo a mano";
 
@@ -974,64 +1202,119 @@ async function copyAlias(button) {
 }
 
 
-function createPaymentAccess(paymentMethod) {
+// Un dato para copiar: etiqueta, valor y botón.
 
-    const access = [];
+function createCopyRow(label, value, copyValue, buttonText, doneLabel) {
+
+    const row = document.createElement("div");
+    row.classList.add("payment-copy-row");
+
+    const text = document.createElement("span");
+    text.classList.add("payment-copy-row__text");
+
+    const caption = document.createElement("small");
+    caption.textContent = label;
+
+    const strong = document.createElement("strong");
+    strong.classList.add("payment-alias");
+    strong.textContent = value;
+
+    text.append(caption, strong);
+
+    const button = document.createElement("button");
+
+    button.type = "button";
+    button.classList.add("payment-copy");
+    button.textContent = buttonText;
+
+    button.addEventListener("click", () => copyText(copyValue, button, doneLabel));
+
+    row.append(text, button);
+
+    return row;
+
+}
+
+
+function createPaymentAccess(paymentMethod, paymentLink = "") {
+
+    const totals = calculateTotals(paymentMethod);
+
+    const amountRow = createCopyRow(
+        paymentMethod === "transferencia" ? "Monto a transferir" : "Monto a pagar",
+        formatPrice(totals.total),
+        String(totals.total),
+        "Copiar monto",
+        "¡Copiado!"
+    );
 
     if (paymentMethod === "transferencia") {
 
-        const alias = document.createElement("strong");
+        const access = [];
 
-        alias.classList.add("payment-alias");
-        alias.textContent = PAYMENT_CONFIG.alias;
+        if (!totals.hasPendingPrices) {
+            access.push(amountRow);
+        }
+
+        access.push(createCopyRow("Alias", PAYMENT_CONFIG.alias, PAYMENT_CONFIG.alias, "Copiar alias", "¡Copiado!"));
+
+        if (PAYMENT_CONFIG.accountHolder) {
+
+            const holder = document.createElement("p");
+
+            holder.textContent = `Titular: ${PAYMENT_CONFIG.accountHolder}`;
+
+            access.push(holder);
+
+        }
+
+        return access;
+
+    }
+
+    if (paymentLink) {
+
+        const link = document.createElement("a");
+
+        link.href = paymentLink;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.classList.add("payment-link-button");
+        link.textContent = `Pagar ${formatPrice(totals.total)} con Mercado Pago`;
 
         const copyButton = document.createElement("button");
 
         copyButton.type = "button";
         copyButton.classList.add("payment-copy");
-        copyButton.textContent = "Copiar alias";
+        copyButton.textContent = "Copiar link";
 
-        copyButton.addEventListener("click", () => copyAlias(copyButton));
+        copyButton.addEventListener("click", () => {
+            copyText(paymentLink, copyButton, "¡Link copiado!");
+        });
 
-        access.push(alias, copyButton);
-
-    } else if (PAYMENT_CONFIG.mercadoPagoLink) {
-
-        const link = document.createElement("a");
-
-        link.href = PAYMENT_CONFIG.mercadoPagoLink;
-        link.target = "_blank";
-        link.rel = "noopener noreferrer";
-        link.textContent = "Abrir link de Mercado Pago";
-
-        access.push(link);
-
-    } else {
-
-        const linkNote = document.createElement("p");
-
-        linkNote.textContent =
-            "Te enviaremos el link de pago por WhatsApp.";
-
-        access.push(linkNote);
+        return [link, copyButton];
 
     }
 
-    return access;
+    const linkNote = document.createElement("p");
+
+    linkNote.textContent =
+        "Te enviamos el link de pago por WhatsApp, con el monto ya cargado.";
+
+    return [linkNote];
 
 }
 
 
+// Pago o link creados por Mercado Pago, con el monto exacto del pedido.
+
 function usesMercadoPagoCheckout(paymentMethod) {
 
-    const config = window.MOVEA_SUPABASE;
     const totals = calculateTotals();
 
     return Boolean(
-        paymentMethod === "mercado-pago" &&
-        config &&
-        config.mercadoPago &&
-        isOrderSavingEnabled() &&
+        (paymentMethod === "mercado-pago" || paymentMethod === "link") &&
+        isMercadoPagoEnabled() &&
         totals.subtotal > 0 &&
         !totals.hasPendingPrices
     );
@@ -1043,8 +1326,13 @@ function updateSubmitButton(paymentMethod) {
 
     const isOnline = usesMercadoPagoCheckout(paymentMethod);
 
+    const texts = {
+        "mercado-pago": "Pagar con Mercado Pago",
+        link: "Generar link de pago"
+    };
+
     checkoutSubmitText.textContent = isOnline
-        ? "Pagar con Mercado Pago"
+        ? texts[paymentMethod]
         : "Enviar pedido por WhatsApp";
 
     checkoutSubmit.querySelector("i").hidden = isOnline;
@@ -1076,23 +1364,40 @@ function renderPaymentInfo() {
     const title = document.createElement("strong");
     const description = document.createElement("p");
 
+    const discountText =
+        `Tenés un ${getDiscountPercent(paymentMethod)}% de descuento por pagar con ${paymentMethod === "transferencia" ? "transferencia" : "Mercado Pago"}.`;
+
     if (usesMercadoPagoCheckout(paymentMethod)) {
 
-        title.textContent = "Pago mediante Mercado Pago";
+        title.textContent = paymentMethod === "link"
+            ? "Link de pago de Mercado Pago"
+            : "Pago con Mercado Pago";
 
-        description.textContent =
-            "Tenés un 15% de descuento. Te llevamos a Mercado Pago para pagar de forma segura.";
+        description.textContent = paymentMethod === "link"
+            ? `${discountText} Te damos un link con el monto ya cargado: lo podés pagar ahora, más tarde o compartirlo. El pago se confirma solo.`
+            : `${discountText} Te llevamos a Mercado Pago con el monto ya cargado para pagar de forma segura. El pago se confirma solo.`;
 
         paymentInfo.append(title, description);
 
-    } else if (isPrepaidMethod(paymentMethod)) {
+    } else if (paymentMethod === "transferencia") {
 
-        title.textContent = paymentMethod === "mercado-pago"
-            ? "Pago mediante Mercado Pago"
-            : "Pago mediante transferencia";
+        title.textContent = "Transferencia con alias";
 
         description.textContent =
-            "Tenés un 15% de descuento por pagar antes de la entrega. Después de pagar, envianos el comprobante por WhatsApp.";
+            `${discountText} Transferí el monto exacto al alias y después envianos el comprobante por WhatsApp.`;
+
+        paymentInfo.append(
+            title,
+            description,
+            ...createPaymentAccess(paymentMethod)
+        );
+
+    } else if (isPrepaidMethod(paymentMethod)) {
+
+        title.textContent = "Pago con Mercado Pago";
+
+        description.textContent =
+            `${discountText} Después de pagar, envianos el comprobante por WhatsApp.`;
 
         paymentInfo.append(
             title,
@@ -1114,6 +1419,13 @@ function renderPaymentInfo() {
     updateCheckoutSummary();
 
 }
+
+
+// El link solo se ofrece si Mercado Pago está conectado.
+
+document.querySelectorAll("[data-payment-link]").forEach(option => {
+    option.hidden = !isMercadoPagoEnabled();
+});
 
 
 checkoutForm.addEventListener("change", event => {
@@ -1141,7 +1453,7 @@ checkoutForm.addEventListener("change", event => {
 // 19. GENERAR MENSAJE DE WHATSAPP
 // ==========================================
 
-function generateWhatsAppMessage(orderCode) {
+function generateWhatsAppMessage(orderCode, paymentLink = "") {
 
     const name = customerName.value.trim();
     const phone = customerPhone.value.trim();
@@ -1150,12 +1462,6 @@ function generateWhatsAppMessage(orderCode) {
     const paymentMethod = getSelectedPaymentMethod();
 
     const totals = calculateTotals(paymentMethod);
-
-    const paymentNames = {
-        "mercado-pago": "Mercado Pago",
-        "transferencia": "Transferencia bancaria",
-        "entrega": "Efectivo al momento de la entrega"
-    };
 
     let message = "";
 
@@ -1203,11 +1509,14 @@ function generateWhatsAppMessage(orderCode) {
     message +=
         `Subtotal de productos con precio conocido: ${formatPrice(totals.subtotal)}\n`;
 
-    if (paymentMethod === "mercado-pago" ||
-        paymentMethod === "transferencia") {
+    if (isPrepaidMethod(paymentMethod)) {
+
+        const discountName = paymentMethod === "transferencia"
+            ? "transferencia"
+            : "Mercado Pago";
 
         message +=
-            `Descuento por pago anticipado (${PAYMENT_CONFIG.discount}%): -${formatPrice(totals.discount)}\n`;
+            `Descuento por pagar con ${discountName} (${getDiscountPercent(paymentMethod)}%): -${formatPrice(totals.discount)}\n`;
 
     } else {
 
@@ -1238,13 +1547,16 @@ function generateWhatsAppMessage(orderCode) {
     message += "\n";
 
     message += "MÉTODO DE PAGO\n";
-    message += `${paymentNames[paymentMethod]}\n`;
+    message += `${PAYMENT_NAMES[paymentMethod]}\n`;
 
-    if (paymentMethod === "mercado-pago") {
+    if (paymentLink) {
 
-        message += PAYMENT_CONFIG.mercadoPagoLink
-            ? `Link de pago: ${PAYMENT_CONFIG.mercadoPagoLink}\n`
-            : "Espero el link de pago por WhatsApp.\n";
+        message += `Link de pago (monto ya cargado): ${paymentLink}\n`;
+        message += "El pago se confirma automáticamente.\n";
+
+    } else if (paymentMethod === "mercado-pago" || paymentMethod === "link") {
+
+        message += "Espero el link de pago por WhatsApp.\n";
 
         message +=
             "Después de pagar, envío el comprobante por este chat.\n";
@@ -1253,6 +1565,10 @@ function generateWhatsAppMessage(orderCode) {
 
         message +=
             `Alias: ${PAYMENT_CONFIG.alias}\n`;
+
+        if (!totals.hasPendingPrices) {
+            message += `Monto a transferir: ${formatPrice(totals.total)}\n`;
+        }
 
         message +=
             "Después de pagar, envío el comprobante por este chat.\n";
@@ -1319,7 +1635,7 @@ async function saveOrder(orderCode, paymentMethod) {
                     p_customer_name: customerName.value.trim(),
                     p_customer_phone: customerPhone.value.trim(),
                     p_details: customerDetails.value.trim(),
-                    p_payment_method: paymentMethod,
+                    p_payment_method: getOrderPaymentMethod(paymentMethod),
                     p_delivery_method: getSelectedDeliveryMethod(),
                     p_delivery_zone: deliveryZone.value.trim(),
                     p_items: cart.map(product => {
@@ -1394,7 +1710,10 @@ async function createPaymentLink(orderCode) {
 }
 
 
-async function startOnlinePayment() {
+// "mercado-pago" lleva directo a pagar; "link" muestra el link
+// para pagarlo después o compartirlo. Los dos tienen el monto cargado.
+
+async function startOnlinePayment(paymentMethod) {
 
     checkoutError.hidden = true;
 
@@ -1405,7 +1724,7 @@ async function startOnlinePayment() {
 
         const orderCode = createOrderCode();
 
-        const result = await saveOrder(orderCode, "mercado-pago");
+        const result = await saveOrder(orderCode, paymentMethod);
 
         if (result.blockedBy) {
 
@@ -1419,7 +1738,38 @@ async function startOnlinePayment() {
             throw new Error("Pedido sin guardar");
         }
 
-        location.href = await createPaymentLink(orderCode);
+        let paymentLink = "";
+
+        try {
+
+            paymentLink = await createPaymentLink(orderCode);
+
+        } catch (error) {
+
+            // El pedido ya está guardado y con stock reservado:
+            // reintentar crearía otro. Sigue por WhatsApp y el link se manda a mano.
+
+            console.error("No se pudo crear el link de pago:", error);
+
+        }
+
+        if (paymentLink && paymentMethod === "mercado-pago") {
+
+            location.href = paymentLink;
+
+            return;
+
+        }
+
+        const message = generateWhatsAppMessage(orderCode, paymentLink);
+
+        const whatsappURL = window.MOVEA_TIENDA.whatsappUrl(message);
+
+        checkoutSubmit.disabled = false;
+
+        updateSubmitButton(paymentMethod);
+
+        showOrderDone(orderCode, paymentMethod, whatsappURL, paymentLink);
 
     } catch (error) {
 
@@ -1432,7 +1782,7 @@ async function startOnlinePayment() {
 
         checkoutSubmit.disabled = false;
 
-        updateSubmitButton("mercado-pago");
+        updateSubmitButton(paymentMethod);
 
     }
 
@@ -1473,7 +1823,7 @@ checkoutForm.addEventListener("submit", event => {
 
     if (usesMercadoPagoCheckout(paymentMethod)) {
 
-        startOnlinePayment();
+        startOnlinePayment(paymentMethod);
 
         return;
 
@@ -1535,15 +1885,14 @@ async function submitOrder(paymentMethod) {
 
     const message = generateWhatsAppMessage(orderCode);
 
-    const whatsappURL =
-        `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+    const whatsappURL = window.MOVEA_TIENDA.whatsappUrl(message);
 
     showOrderDone(orderCode, paymentMethod, whatsappURL);
 
 }
 
 
-function showOrderDone(orderCode, paymentMethod, whatsappURL) {
+function showOrderDone(orderCode, paymentMethod, whatsappURL, paymentLink = "") {
 
     checkoutSection.hidden = true;
     orderDone.hidden = false;
@@ -1553,9 +1902,19 @@ function showOrderDone(orderCode, paymentMethod, whatsappURL) {
 
     orderDoneProof.hidden = !isPrepaidMethod(paymentMethod);
 
+    // Con link de Mercado Pago no hace falta comprobante: el pago se confirma solo.
+
+    orderDoneProofTitle.textContent = paymentLink
+        ? "Tu link de pago"
+        : "Enviá tu comprobante";
+
+    orderDoneProofText.textContent = paymentLink
+        ? "El monto ya está cargado. Podés pagar ahora o más tarde, y también compartir el link. Cuando se acredite, tu pedido se confirma solo."
+        : "Cuando hagas el pago, mandanos el comprobante por el mismo chat de WhatsApp. Tu pedido se confirma al verificarlo.";
+
     orderDonePayment.replaceChildren(
         ...(isPrepaidMethod(paymentMethod)
-            ? createPaymentAccess(paymentMethod)
+            ? createPaymentAccess(paymentMethod, paymentLink)
             : [])
     );
 
@@ -1640,16 +1999,55 @@ document.addEventListener("movea:catalogo", event => {
 
     cart.forEach(product => {
 
-        product.name = catalog.get(product.id).name;
-        product.price = catalog.get(product.id).price;
+        const item = catalog.get(product.id);
+
+        product.name = item.name;
+        product.price = item.price;
+
+        if (item.image_url) {
+            product.image = new URL(item.image_url, siteRoot).href;
+        }
 
     });
 
     saveCart();
     renderCart();
     showPrepaidPrices();
+    openSharedProduct();
 
 });
+
+
+// Un enlace compartido (productos.html?producto=ID) abre ese producto.
+
+let sharedProductOpened = false;
+
+function openSharedProduct() {
+
+    const id = new URLSearchParams(location.search).get("producto");
+
+    if (!id || sharedProductOpened) return;
+
+    sharedProductOpened = true;
+
+    const card = Array.from(document.querySelectorAll(".product_card[data-id]"))
+        .find(item => item.dataset.id === id);
+
+    if (!card) return;
+
+    // Agotado: no se abre la ventana, se muestra la tarjeta con "Avisame cuando vuelva".
+
+    if (card.classList.contains("is-sold-out")) {
+
+        card.scrollIntoView({ block: "center" });
+
+        return;
+
+    }
+
+    openProductDialog(card);
+
+}
 
 
 // ==========================================
