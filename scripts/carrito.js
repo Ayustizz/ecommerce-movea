@@ -1221,6 +1221,16 @@ function createCopyRow(label, value, copyValue, buttonText, doneLabel) {
 
     text.append(caption, strong);
 
+    // Sin texto de botón, el dato se muestra solo, sin "Copiar".
+
+    if (!buttonText) {
+
+        row.append(text);
+
+        return row;
+
+    }
+
     const button = document.createElement("button");
 
     button.type = "button";
@@ -1240,20 +1250,12 @@ function createPaymentAccess(paymentMethod, paymentLink = "") {
 
     const totals = calculateTotals(paymentMethod);
 
-    const amountRow = createCopyRow(
-        paymentMethod === "transferencia" ? "Monto a transferir" : "Monto a pagar",
-        formatPrice(totals.total),
-        String(totals.total),
-        "Copiar monto",
-        "¡Copiado!"
-    );
-
     if (paymentMethod === "transferencia") {
 
         const access = [];
 
         if (!totals.hasPendingPrices) {
-            access.push(amountRow);
+            access.push(createCopyRow("Monto a transferir", formatPrice(totals.total)));
         }
 
         access.push(createCopyRow("Alias", PAYMENT_CONFIG.alias, PAYMENT_CONFIG.alias, "Copiar alias", "¡Copiado!"));
