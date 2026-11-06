@@ -1,5 +1,5 @@
 -- =====================================
--- MOVEA - REFUERZOS DE SEGURIDAD
+-- TIENDA - REFUERZOS DE SEGURIDAD
 -- Ejecutar una sola vez en el SQL Editor de Supabase,
 -- después de migracion-cuentas.sql.
 -- No borra productos ni ventas.

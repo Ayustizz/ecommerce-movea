@@ -1,5 +1,5 @@
 -- =====================================
--- MOVEA - TALLES, COLORES Y TELÉFONO
+-- TIENDA - TALLES, COLORES Y TELÉFONO
 -- Ejecutar una sola vez en el SQL Editor de Supabase,
 -- solo si ya se había ejecutado schema.sql antes de este cambio.
 -- No borra productos ni ventas.

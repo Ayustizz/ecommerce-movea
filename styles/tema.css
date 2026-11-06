@@ -3,6 +3,10 @@
    Colores y tipografías de la marca. Para otro cliente
    se cambia solo este archivo: el resto de los estilos usa
    estas variables.
+
+   Consejo: elegí el color principal y el de acento, y armá los
+   tonos claros mezclándolos con blanco. Cada color que tiene una
+   variante -rgb lleva el mismo color escrito como "rojo, verde, azul".
 ===================================== */
 
 /* Tipografías (Google Fonts). Si se cambian, actualizar también --font-* */
@@ -15,36 +19,36 @@
     --font-texto: 'Poppins', sans-serif;
 
     /* Color principal: textos fuertes, botones, cabecera */
-    --tienda-ink: #311c1c;
-    --tienda-ink-rgb: 49, 28, 28;
-    --tienda-ink-soft: #563535;
-    --tienda-texto: #1f1b1b;
-    --tienda-texto-2: #514745;
+    --tienda-ink: #222831;
+    --tienda-ink-rgb: 34, 40, 49;
+    --tienda-ink-soft: #3a4250;
+    --tienda-texto: #1d1f23;
+    --tienda-texto-2: #4a4f57;
 
     /* Acento: detalles, enlaces, íconos */
-    --tienda-acento: #805b50;
-    --tienda-acento-rgb: 128, 91, 80;
-    --tienda-acento-fuerte: #704747;
-    --tienda-acento-fuerte-rgb: 112, 71, 71;
-    --tienda-acento-medio: #c9a99d;
-    --tienda-acento-claro: #e8c6b8;
-    --tienda-acento-claro-rgb: 232, 198, 184;
+    --tienda-acento: #4a6b8a;
+    --tienda-acento-rgb: 74, 107, 138;
+    --tienda-acento-fuerte: #3d5a75;
+    --tienda-acento-fuerte-rgb: 61, 90, 117;
+    --tienda-acento-medio: #9fb3c6;
+    --tienda-acento-claro: #c9d6e3;
+    --tienda-acento-claro-rgb: 201, 214, 227;
 
     /* Fondos */
-    --tienda-paper: #fbf8f6;
+    --tienda-paper: #f7f8fa;
     --tienda-surface: #ffffff;
-    --tienda-suave: #f2e4de;
-    --tienda-suave-2: #f5eeea;
-    --tienda-suave-3: #f8f2ef;
+    --tienda-suave: #e6edf3;
+    --tienda-suave-2: #eef2f6;
+    --tienda-suave-3: #f3f6f9;
 
     /* Cabecera y pie (degradado) */
-    --tienda-oscuro-1: #241515;
-    --tienda-oscuro-2: #3d2525;
+    --tienda-oscuro-1: #161b22;
+    --tienda-oscuro-2: #2a313c;
 
     /* Textos secundarios y bordes */
-    --tienda-muted: #6f6260;
-    --tienda-border: #eadfdb;
-    --tienda-border-fuerte: #d9c8c1;
+    --tienda-muted: #626a74;
+    --tienda-border: #e1e6ec;
+    --tienda-border-fuerte: #c8d1db;
 
     --tienda-shadow: 0 12px 32px rgba(var(--tienda-ink-rgb), 0.09);
 }

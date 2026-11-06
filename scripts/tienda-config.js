@@ -5,31 +5,32 @@
 // Todo lo que cambia de un negocio a otro está acá:
 // nombre, contacto, cobro, opciones de los productos y entregas.
 // Los colores y tipografías están en styles/tema.css.
+// configurar-tienda.py completa la mayoría de estos datos desde cliente.json.
 // ==========================================
 
 window.TIENDA = {
 
     // Identificador corto, sin espacios: se usa para guardar el carrito
     // y en el nombre de los archivos que se descargan desde el panel.
-    id: "movea",
+    id: "mi-tienda",
 
-    nombre: "Movea",
+    nombre: "Mi Tienda",
 
     // WhatsApp de la tienda, solo números: 54 + 9 + código de área + número.
-    whatsapp: "5491151227752",
+    whatsapp: "5491100000000",
 
     // Cómo se muestra el número en la página.
-    whatsappVisible: "11 5122-7752",
+    whatsappVisible: "11 0000-0000",
 
-    instagram: "moveafitt",
+    instagram: "mitienda",
 
     // Se muestra en Contacto. Dejarlo vacío ("") para ocultarlo.
-    horario: "Lunes a sábado de 9 a 20 h",
+    horario: "",
 
     // Datos para la transferencia. Titular vacío ("") para no mostrarlo.
     transferencia: {
-        alias: "Martuu.rocio",
-        titular: "Martina Rocio Bugallo Zak"
+        alias: "mi.alias",
+        titular: ""
     },
 
     // Descuento (%) por medio de pago. El que vale es el que se carga en el
@@ -42,18 +43,20 @@ window.TIENDA = {
     // Opciones que elige el cliente en cada producto.
     // "talle" son botones fijos que se marcan en el panel; "color" se escribe libre.
     // Para un rubro sin talles: opciones: []. Para cambiar el nombre: nombre y plural.
+    // Ejemplos: { nombre: "Tamaño", plural: "Tamaños", opciones: ["Chico", "Mediano", "Grande"] }
+    //           { nombre: "Aroma", plural: "Aromas", ejemplo: "Vainilla, Lavanda" }
     variantes: {
         talle: {
             nombre: "Talle",
             plural: "Talles",
-            opciones: ["XS", "S", "M", "L", "XL", "XXL", "Único"],
+            opciones: ["S", "M", "L", "XL", "Único"],
             // Con estas opciones no se muestra la guía de talles.
             sinGuia: ["Único"]
         },
         color: {
             nombre: "Color",
             plural: "Colores",
-            ejemplo: "Negro, Blanco, Marrón"
+            ejemplo: "Negro, Blanco, Azul"
         }
     },
 
@@ -63,35 +66,31 @@ window.TIENDA = {
     // dato y ejemplo: el campo que se pide (zona, dirección...).
     entregas: [
         {
-            id: "encuentro",
-            nombre: "Punto de encuentro",
-            detalle: "Coordinamos el lugar con vos",
-            mensaje: "Punto de encuentro",
-            dato: "Tu zona o barrio",
-            ejemplo: "Ej.: Tortuguitas"
+            id: "retiro",
+            nombre: "Retiro en el local",
+            detalle: "Te avisamos cuando esté listo",
+            mensaje: "Retiro en el local",
+            dato: "Tu barrio",
+            ejemplo: "Ej.: Centro"
         },
         {
-            id: "uber",
-            nombre: "Envío por Uber",
+            id: "envio",
+            nombre: "Envío a domicilio",
             detalle: "Coordinamos el envío y su costo con vos",
-            mensaje: "Envío a coordinar",
+            mensaje: "Envío a domicilio, a coordinar",
             dato: "Dirección de entrega",
-            ejemplo: "Ej.: Av. Siempre Viva 123, Tortuguitas"
+            ejemplo: "Ej.: Av. Siempre Viva 742"
         }
     ],
 
-    // Guía de talles de la ventana de cada producto, en centímetros.
-    // Dejar filas: [] para ocultar el enlace "¿Qué talle soy?".
+    // Guía de talles de la ventana de cada producto.
+    // Con filas: [] no se muestra el enlace "¿Qué talle soy?".
+    // Ejemplo:
+    //   columnas: ["Talle", "Busto", "Cintura", "Cadera"],
+    //   filas: [["S", "82-86", "62-66", "88-92"], ["M", "86-90", "66-70", "92-96"]],
     guiaDeTalles: {
-        columnas: ["Talle", "Busto", "Cintura", "Cadera"],
-        filas: [
-            ["XS", "78-82", "58-62", "84-88"],
-            ["S", "82-86", "62-66", "88-92"],
-            ["M", "86-90", "66-70", "92-96"],
-            ["L", "90-96", "70-76", "96-102"],
-            ["XL", "96-102", "76-82", "102-108"],
-            ["XXL", "102-108", "82-88", "108-114"]
-        ],
+        columnas: [],
+        filas: [],
         nota: "Si estás entre dos talles, te recomendamos el más grande. Ante cualquier duda, escribinos."
     }
 

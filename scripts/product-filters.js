@@ -3,7 +3,7 @@ document.querySelectorAll("[data-product-list]").forEach((list) => {
     const categorySelect = list.querySelector("[data-product-category]");
     const sortSelect = list.querySelector("[data-product-sort]");
 
-    // Categoría pedida desde un enlace, por ejemplo productos.html?categoria=shorts
+    // Categoría pedida desde un enlace, por ejemplo productos.html?categoria=novedades
     const requestedCategory = new URLSearchParams(location.search).get("categoria") || "";
     const count = list.querySelector("[data-product-count]");
     const emptyMessage = list.querySelector("[data-product-empty]");

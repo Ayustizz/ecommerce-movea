@@ -4,4 +4,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://moveafit.netlify.app/sitemap.xml
+Sitemap: https://mi-tienda.netlify.app/sitemap.xml

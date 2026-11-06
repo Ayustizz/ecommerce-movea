@@ -1,5 +1,5 @@
 -- =====================================
--- MOVEA - BASE DE DATOS
+-- TIENDA - BASE DE DATOS
 -- Ejecutar completo una sola vez en el SQL Editor de Supabase, solo en una base nueva.
 -- =====================================
 
@@ -409,7 +409,7 @@ create policy "admin borra banners" on public.banners
     using (public.is_admin());
 
 insert into public.banners (image_url, alt, sort_order) values
-    ('img/banners/Banner_inicio.jpg', 'Movea', 1),
+    ('img/banners/Banner_inicio.jpg', 'la tienda', 1),
     ('img/banners/banner_descuento.jpg', 'Hasta 25% off en productos seleccionados', 2),
     ('img/banners/banner_ofertas.jpg', '20% off, 12 cuotas y envíos en 24 horas', 3);
 
@@ -697,27 +697,16 @@ create policy "admin borra categorias" on public.categories
     for delete to authenticated
     using (public.is_admin());
 
-insert into public.categories (slug, name, parent_slug, sort_order) values
-    ('shorts', 'Shorts', null, 1),
-    ('shorts-push-up', 'Push up', 'shorts', 1),
-    ('shorts-sin-frunce', 'Sin frunce', 'shorts', 2),
-    ('calzas', 'Calzas', null, 2),
-    ('calzas-rectas', 'Rectas', 'calzas', 1),
-    ('calzas-oxford', 'Oxford', 'calzas', 2),
-    ('tops-deportivos', 'Tops deportivos', null, 3),
-    ('corpinos-deportivos', 'Corpiños deportivos', null, 4);
+-- Las categorías las crea cada tienda desde el panel (pestaña Categorías).
 
 
 -- PRODUCTOS
--- Buzos y joggers quedan "sin categoría" hasta elegirles una en el panel.
 -- Una categoría con productos no se puede borrar.
 
 alter table public.products
     drop constraint products_category_check,
     alter column category drop not null;
 
-update public.products set category = 'tops-deportivos' where category = 'tops';
-update public.products set category = null where category in ('buzos', 'joggers');
 
 alter table public.products
     add constraint products_category_fkey

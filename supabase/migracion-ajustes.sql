@@ -1,5 +1,5 @@
 -- =====================================
--- MOVEA - AJUSTES DEL NEGOCIO
+-- TIENDA - AJUSTES DEL NEGOCIO
 -- Ejecutar una sola vez en el SQL Editor de Supabase,
 -- después de migracion-descuentos.sql.
 -- - Los descuentos por medio de pago pasan a cargarse en el panel (pestaña Ajustes).

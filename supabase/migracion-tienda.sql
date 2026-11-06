@@ -1,5 +1,5 @@
 -- =====================================
--- MOVEA - STOCK, OFERTAS, BANNERS Y ENTREGA
+-- TIENDA - STOCK, OFERTAS, BANNERS Y ENTREGA
 -- Ejecutar una sola vez en el SQL Editor de Supabase,
 -- después de migracion-seguridad.sql.
 -- No borra productos ni ventas.
@@ -85,7 +85,7 @@ create policy "admin borra banners" on public.banners
     using (public.is_admin());
 
 insert into public.banners (image_url, alt, sort_order) values
-    ('img/banners/Banner_inicio.jpg', 'Movea', 1),
+    ('img/banners/Banner_inicio.jpg', 'la tienda', 1),
     ('img/banners/banner_descuento.jpg', 'Hasta 25% off en productos seleccionados', 2),
     ('img/banners/banner_ofertas.jpg', '20% off, 12 cuotas y envíos en 24 horas', 3);
 

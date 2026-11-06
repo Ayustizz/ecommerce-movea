@@ -1,5 +1,5 @@
 -- =====================================
--- MOVEA - DESCUENTO POR MÉTODO DE PAGO
+-- TIENDA - DESCUENTO POR MÉTODO DE PAGO
 -- Ejecutar una sola vez en el SQL Editor de Supabase,
 -- después de migracion-ventas.sql.
 -- Mercado Pago (pagar ahora o link) y transferencia: 10%. Efectivo: sin descuento.

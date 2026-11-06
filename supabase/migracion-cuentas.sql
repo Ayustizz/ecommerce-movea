@@ -1,5 +1,5 @@
 -- =====================================
--- MOVEA - COSTOS Y CUENTAS DEL NEGOCIO
+-- TIENDA - COSTOS Y CUENTAS DEL NEGOCIO
 -- Ejecutar una sola vez en el SQL Editor de Supabase,
 -- después de migracion-talles-y-colores.sql.
 -- No borra productos ni ventas.

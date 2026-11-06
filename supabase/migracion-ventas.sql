@@ -1,5 +1,5 @@
 -- =====================================
--- MOVEA - PAGO Y ENTREGA POR SEPARADO, ELIMINAR PEDIDOS
+-- TIENDA - PAGO Y ENTREGA POR SEPARADO, ELIMINAR PEDIDOS
 -- Ejecutar una sola vez en el SQL Editor de Supabase,
 -- después de migracion-categorias.sql.
 -- No borra pedidos.

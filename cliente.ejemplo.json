@@ -1,0 +1,24 @@
+{
+    "_ayuda": "Copiar este archivo como cliente.json, completarlo y correr: python configurar-tienda.py",
+
+    "nombre": "Velas Luz",
+    "id": "velas-luz",
+    "descripcion": "Velas artesanales de soja. Comprá online y coordiná tu pedido por WhatsApp.",
+
+    "sitio": "https://velas-luz.netlify.app",
+
+    "supabase_url": "https://abcdefghijklmnop.supabase.co",
+    "supabase_clave_publica": "sb_publishable_xxxxxxxxxxxxxxxxxxxxxxxx",
+
+    "whatsapp": "5491122223333",
+    "whatsapp_visible": "11 2222-3333",
+    "instagram": "velasluz",
+    "horario": "Lunes a viernes de 10 a 18 h",
+
+    "ciudad": "Rosario",
+    "provincia": "Santa Fe",
+    "mapa_embed": "",
+
+    "alias": "velas.luz",
+    "titular": "Ana Pérez"
+}

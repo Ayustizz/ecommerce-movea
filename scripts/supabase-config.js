@@ -5,8 +5,8 @@
 // Mientras estén vacíos, la tienda usa los productos del HTML.
 
 window.TIENDA_SUPABASE = {
-    url: "https://bynttfvlwyplfovklzxa.supabase.co",
-    anonKey: "sb_publishable_aOYae4AFMNPPF1uk_D6bGA_XyRRZMOv",
+    url: "https://TU-PROYECTO.supabase.co",
+    anonKey: "TU-CLAVE-PUBLICA",
 
     // Activar cuando las funciones de Mercado Pago estén instaladas.
     mercadoPago: false

@@ -1,5 +1,5 @@
 -- =====================================
--- MOVEA - CATEGORÍAS EDITABLES
+-- TIENDA - CATEGORÍAS EDITABLES
 -- Ejecutar una sola vez en el SQL Editor de Supabase,
 -- después de migracion-tienda.sql.
 -- No borra productos ni ventas.

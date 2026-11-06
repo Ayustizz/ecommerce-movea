@@ -1489,7 +1489,7 @@ footer > p {
 
 
 /* =====================================
-   MOVEA - CARRITO DE COMPRAS
+   TIENDA - CARRITO DE COMPRAS
 ===================================== */
 
 /* Botón flotante */
@@ -1865,7 +1865,7 @@ body.cart-open {
 
 
 /* =====================================
-   MOVEA - CHECKOUT
+   TIENDA - CHECKOUT
 ===================================== */
 
 .checkout-section[hidden],
@@ -2162,7 +2162,7 @@ body.cart-open {
 
 
 /* =====================================
-   MOVEA - ELEGIR TALLE Y COLOR
+   TIENDA - ELEGIR TALLE Y COLOR
 ===================================== */
 
 .product_card figure,
@@ -2517,7 +2517,7 @@ body.cart-open {
 
 
 /* =====================================
-   MOVEA - AJUSTES PARA CELULAR
+   TIENDA - AJUSTES PARA CELULAR
 ===================================== */
 
 @media (max-width: 639px) {
@@ -2559,7 +2559,7 @@ body.cart-open {
 
 
 /* =====================================
-   MOVEA - PRESENTACIÓN DE LA TIENDA
+   TIENDA - PRESENTACIÓN DE LA TIENDA
 ===================================== */
 
 /* Encabezado fijo */
@@ -2923,7 +2923,7 @@ body.cart-open {
 
 
 /* =====================================
-   MOVEA - PAGO CON MERCADO PAGO
+   TIENDA - PAGO CON MERCADO PAGO
 ===================================== */
 
 .checkout-error {
@@ -3001,7 +3001,7 @@ main > .pago-card {
 
 
 /* =====================================
-   MOVEA - STOCK Y OFERTAS
+   TIENDA - STOCK Y OFERTAS
 ===================================== */
 
 .product_card.is-sold-out figure,
@@ -3052,7 +3052,7 @@ main > .pago-card {
 
 
 /* =====================================
-   MOVEA - CONTACTO
+   TIENDA - CONTACTO
 ===================================== */
 
 .contacto-faq {
@@ -3099,7 +3099,7 @@ main > .pago-card {
 
 
 /* =====================================
-   MOVEA - PÁGINAS LEGALES
+   TIENDA - PÁGINAS LEGALES
 ===================================== */
 
 main > .legal-page {
@@ -3155,7 +3155,7 @@ footer .footer-regret {
 
 
 /* =====================================
-   MOVEA - DETALLES DE LA TIENDA
+   TIENDA - DETALLES DE LA TIENDA
 ===================================== */
 
 /* Etiquetas de las tarjetas */

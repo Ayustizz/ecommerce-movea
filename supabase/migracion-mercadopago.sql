@@ -1,5 +1,5 @@
 -- =====================================
--- MOVEA - PAGO DIRECTO CON MERCADO PAGO
+-- TIENDA - PAGO DIRECTO CON MERCADO PAGO
 -- Ejecutar una sola vez en el SQL Editor de Supabase,
 -- después de migracion-seguridad.sql.
 -- No borra productos ni ventas.

@@ -1,7 +1,7 @@
 // Crea el pago en Mercado Pago para un pedido ya guardado.
 // Recibe solo el código del pedido: el importe sale de la base.
 
-const SITE_URL = Deno.env.get("SITE_URL") ?? "https://moveafit.netlify.app";
+const SITE_URL = Deno.env.get("SITE_URL") ?? "https://mi-tienda.netlify.app";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 const MP_ACCESS_TOKEN = Deno.env.get("MP_ACCESS_TOKEN");
