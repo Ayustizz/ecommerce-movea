@@ -5,32 +5,32 @@
 // 1. CONFIGURACIÓN
 // ==========================================
 
-// El número de WhatsApp está en scripts/tienda-config.js.
+// Los datos del negocio (WhatsApp, alias, entregas, talles...)
+// están en scripts/tienda-config.js.
 
-const STORAGE_KEY = "movea-cart-v2";
+const STORE_CONFIG = window.TIENDA;
+
+const STORAGE_KEY = `${STORE_CONFIG.id}-cart-v2`;
 
 // Raíz del sitio, para las fotos y los enlaces de productos.
 const siteRoot = new URL("../", document.currentScript.src);
 
-const DELIVERY_NAMES = {
-    encuentro: "Punto de encuentro",
-    uber: "Envío a coordinar"
-};
+const DELIVERY_OPTIONS = STORE_CONFIG.entregas;
 
-// Datos de cobro del negocio.
+const SIZE_LABEL = STORE_CONFIG.variantes.talle.nombre;
+const COLOR_LABEL = STORE_CONFIG.variantes.color.nombre;
+
 // El pago y el link de Mercado Pago con el monto cargado se crean solos
 // cuando mercadoPago está activo en scripts/supabase-config.js.
+// Los descuentos se reemplazan por los del panel apenas cargan (ver loadDiscounts).
 
 const PAYMENT_CONFIG = {
-    alias: "Martuu.rocio",
-    // Nombre del titular de la cuenta, para que el cliente lo verifique antes de transferir.
-    accountHolder: "Martina Rocio Bugallo Zak",
-    // Descuento en % según el medio de pago. Tienen que coincidir con
-    // create_order en supabase/migracion-descuentos.sql.
+    alias: STORE_CONFIG.transferencia.alias,
+    accountHolder: STORE_CONFIG.transferencia.titular,
     discounts: {
-        "mercado-pago": 10,
-        link: 10,
-        transferencia: 10
+        "mercado-pago": STORE_CONFIG.descuentos["mercado-pago"],
+        link: STORE_CONFIG.descuentos["mercado-pago"],
+        transferencia: STORE_CONFIG.descuentos.transferencia
     }
 };
 
@@ -496,23 +496,23 @@ function openProductDialog(card) {
 
     }
 
-    const prepaidPercent = PAYMENT_CONFIG.discounts.transferencia;
+    const prepaidPercent = getBestDiscount();
 
     productDialogPrepaid.hidden = !(product.price > 0);
     productDialogPrepaid.textContent =
-        `${formatPrice(product.price - Math.round(product.price * prepaidPercent / 100))} pagando con transferencia o Mercado Pago (${prepaidPercent}% off)`;
+        `${formatPrice(product.price - Math.round(product.price * prepaidPercent / 100))} pagando con transferencia o Mercado Pago (${getBestDiscountText()})`;
 
     // La guía de talles no aplica a productos de talle único.
 
     sizeGuide.hidden =
         !hasSizeGuide() ||
         product.sizes.length === 0 ||
-        product.sizes.every(size => size === "Único");
+        product.sizes.every(size => STORE_CONFIG.variantes.talle.sinGuia.includes(size));
 
     sizeGuide.open = false;
 
-    productDialogWhatsapp.href = window.MOVEA_TIENDA.whatsappUrl(
-        `¡Hola Movea! Quiero consultar por el producto "${product.name}".`
+    productDialogWhatsapp.href = window.TIENDA.whatsappUrl(
+        `${STORE_CONFIG.saludo()} Quiero consultar por el producto "${product.name}".`
     );
 
     productDialogShare.lastElementChild.textContent = "Compartir";
@@ -554,7 +554,7 @@ document.addEventListener("click", event => {
 
 function hasSizeGuide() {
 
-    const guide = window.MOVEA_TIENDA && window.MOVEA_TIENDA.guiaDeTalles;
+    const guide = window.TIENDA && window.TIENDA.guiaDeTalles;
 
     return Boolean(guide && guide.filas && guide.filas.length > 0);
 
@@ -565,7 +565,7 @@ function renderSizeGuide() {
 
     if (!hasSizeGuide()) return;
 
-    const guide = window.MOVEA_TIENDA.guiaDeTalles;
+    const guide = window.TIENDA.guiaDeTalles;
 
     const table = document.createElement("table");
     const head = table.createTHead().insertRow();
@@ -628,7 +628,7 @@ productDialogShare.addEventListener("click", async () => {
 
         if (navigator.share) {
 
-            await navigator.share({ title: `${selectedProduct.name} | Movea`, url });
+            await navigator.share({ title: `${selectedProduct.name} | ${STORE_CONFIG.nombre}`, url });
 
             return;
 
@@ -693,9 +693,9 @@ productDialogForm.addEventListener("submit", event => {
     );
 
     const missing = selectedProduct.sizes.length > 0 && !size
-        ? "Elegí un talle."
+        ? `Falta elegir ${SIZE_LABEL.toLowerCase()}.`
         : selectedProduct.colors.length > 0 && !color
-            ? "Elegí un color."
+            ? `Falta elegir ${COLOR_LABEL.toLowerCase()}.`
             : "";
 
     productDialogError.textContent = missing;
@@ -778,31 +778,63 @@ cartToastOpen.addEventListener("click", () => {
 });
 
 
+// El mejor descuento entre transferencia y Mercado Pago.
+
+function getBestDiscount() {
+
+    return Math.max(
+        PAYMENT_CONFIG.discounts.transferencia,
+        PAYMENT_CONFIG.discounts["mercado-pago"]
+    );
+
+}
+
+// "10% off", o "hasta 15% off" si cada medio tiene un descuento distinto.
+
+function getBestDiscountText() {
+
+    const isSame =
+        PAYMENT_CONFIG.discounts.transferencia === PAYMENT_CONFIG.discounts["mercado-pago"];
+
+    return `${isSame ? "" : "hasta "}${getBestDiscount()}% off`;
+
+}
+
+
+// Se vuelve a llamar si cambian los descuentos: actualiza la línea que ya existe.
+
 function showPrepaidPrices() {
+
+    const percent = getBestDiscount();
 
     document.querySelectorAll(".product_card[data-id]").forEach(card => {
 
         const price = Number(card.dataset.price);
 
-            if (
-            !(price > 0) ||
-            card.classList.contains("is-sold-out") ||
-            card.querySelector(".product-card__prepaid")
-        ) return;
+        let prepaid = card.querySelector(".product-card__prepaid");
 
-        const prepaid = document.createElement("p");
+        if (!(price > 0) || card.classList.contains("is-sold-out") || percent === 0) {
 
-        const prepaidPrice =
-            price - Math.round(price * PAYMENT_CONFIG.discounts.transferencia / 100);
+            if (prepaid) prepaid.remove();
+
+            return;
+
+        }
+
+        if (!prepaid) {
+
+            prepaid = document.createElement("p");
+            prepaid.classList.add("product-card__prepaid");
+            prepaid.title = "Pagando con transferencia o Mercado Pago";
+
+            card.querySelector(".product-card__price").after(prepaid);
+
+        }
 
         // Corto para que entre en una línea en el celular.
 
-        prepaid.classList.add("product-card__prepaid");
         prepaid.textContent =
-            `${formatPrice(prepaidPrice)} con ${PAYMENT_CONFIG.discounts.transferencia}% off`;
-        prepaid.title = "Pagando con transferencia o Mercado Pago";
-
-        card.querySelector(".product-card__price").after(prepaid);
+            `${formatPrice(price - Math.round(price * percent / 100))} con ${getBestDiscountText()}`;
 
     });
 
@@ -812,7 +844,7 @@ function showPrepaidPrices() {
 function getVariantText(product) {
 
     return [
-        product.size && `Talle ${product.size}`,
+        product.size && `${SIZE_LABEL} ${product.size}`,
         product.color
     ].filter(Boolean).join(", ");
 
@@ -1176,7 +1208,7 @@ function getOrderPaymentMethod(paymentMethod) {
 
 function isMercadoPagoEnabled() {
 
-    const config = window.MOVEA_SUPABASE;
+    const config = window.TIENDA_SUPABASE;
 
     return Boolean(config && config.mercadoPago && isOrderSavingEnabled());
 
@@ -1426,13 +1458,10 @@ checkoutForm.addEventListener("change", event => {
 
     if (event.target.name === "deliveryMethod") {
 
-        deliveryZoneLabel.textContent = event.target.value === "uber"
-            ? "Dirección de entrega *"
-            : "Tu zona o barrio *";
+        const option = getDeliveryOption(event.target.value);
 
-        deliveryZone.placeholder = event.target.value === "uber"
-            ? "Ej.: Av. Siempre Viva 123, Tortuguitas"
-            : "Ej.: Tortuguitas";
+        deliveryZoneLabel.textContent = `${option.dato} *`;
+        deliveryZone.placeholder = option.ejemplo;
 
     }
 
@@ -1455,7 +1484,7 @@ function generateWhatsAppMessage(orderCode, paymentLink = "") {
 
     let message = "";
 
-    message += "¡Hola Movea! Quiero realizar el siguiente pedido.\n\n";
+    message += `${STORE_CONFIG.saludo()} Quiero realizar el siguiente pedido.\n\n`;
 
     if (orderCode) {
         message += `Pedido: ${orderCode}\n\n`;
@@ -1524,7 +1553,7 @@ function generateWhatsAppMessage(orderCode, paymentLink = "") {
     }
 
     message += "\nENTREGA\n";
-    message += `${DELIVERY_NAMES[getSelectedDeliveryMethod()]}\n`;
+    message += `${getDeliveryOption(getSelectedDeliveryMethod()).mensaje}\n`;
     message += `${deliveryZone.value.trim()}\n`;
 
     if (details) {
@@ -1583,7 +1612,7 @@ function generateWhatsAppMessage(orderCode, paymentLink = "") {
 
 function isOrderSavingEnabled() {
 
-    const config = window.MOVEA_SUPABASE;
+    const config = window.TIENDA_SUPABASE;
 
     return Boolean(config && config.url && config.anonKey);
 
@@ -1607,7 +1636,7 @@ function createOrderCode() {
 
 async function saveOrder(orderCode, paymentMethod) {
 
-    const config = window.MOVEA_SUPABASE;
+    const config = window.TIENDA_SUPABASE;
 
     try {
 
@@ -1669,7 +1698,7 @@ async function saveOrder(orderCode, paymentMethod) {
 
 async function createPaymentLink(orderCode) {
 
-    const config = window.MOVEA_SUPABASE;
+    const config = window.TIENDA_SUPABASE;
 
     const response = await fetch(
         `${config.url}/functions/v1/crear-pago`,
@@ -1753,7 +1782,7 @@ async function startOnlinePayment(paymentMethod) {
 
         const message = generateWhatsAppMessage(orderCode, paymentLink);
 
-        const whatsappURL = window.MOVEA_TIENDA.whatsappUrl(message);
+        const whatsappURL = window.TIENDA.whatsappUrl(message);
 
         checkoutSubmit.disabled = false;
 
@@ -1875,7 +1904,7 @@ async function submitOrder(paymentMethod) {
 
     const message = generateWhatsAppMessage(orderCode);
 
-    const whatsappURL = window.MOVEA_TIENDA.whatsappUrl(message);
+    const whatsappURL = window.TIENDA.whatsappUrl(message);
 
     showOrderDone(orderCode, paymentMethod, whatsappURL);
 
@@ -1958,7 +1987,7 @@ function syncCartWithPage() {
 // Con el catálogo del panel también se quitan
 // los productos que ya no están a la venta.
 
-document.addEventListener("movea:catalogo", event => {
+document.addEventListener("tienda:catalogo", event => {
 
     const catalog = new Map(
         event.detail.map(product => [product.id, product])
@@ -2041,9 +2070,111 @@ function openSharedProduct() {
 
 
 // ==========================================
-// 23. INICIALIZAR
+// 23. DATOS DEL NEGOCIO EN LA PÁGINA
 // ==========================================
 
+function getDeliveryOption(id) {
+
+    return DELIVERY_OPTIONS.find(option => option.id === id) ?? {
+        id,
+        nombre: id,
+        mensaje: id,
+        dato: "Zona o dirección",
+        ejemplo: ""
+    };
+
+}
+
+
+// Opciones de entrega del checkout, desde "entregas" en tienda-config.js.
+
+function renderDeliveryOptions() {
+
+    const fieldset = checkoutForm.querySelector("[data-entregas]");
+
+    if (!fieldset) return;
+
+    fieldset.querySelectorAll(".payment-option").forEach(option => option.remove());
+
+    DELIVERY_OPTIONS.forEach((option, index) => {
+
+        const label = document.createElement("label");
+        label.classList.add("payment-option");
+
+        const input = document.createElement("input");
+
+        input.type = "radio";
+        input.name = "deliveryMethod";
+        input.value = option.id;
+        input.required = index === 0;
+
+        const content = document.createElement("span");
+        content.classList.add("payment-option-content");
+
+        const name = document.createElement("strong");
+        name.textContent = option.nombre;
+
+        const detail = document.createElement("span");
+        detail.classList.add("payment-no-discount");
+        detail.textContent = option.detalle;
+
+        content.append(name, detail);
+        label.append(input, content);
+        fieldset.append(label);
+
+    });
+
+    // Con una sola forma de entrega, ya queda elegida.
+
+    if (DELIVERY_OPTIONS.length === 1) {
+
+        const only = fieldset.querySelector("input");
+
+        only.checked = true;
+        only.dispatchEvent(new Event("change", { bubbles: true }));
+
+    }
+
+}
+
+
+// Nombres de las opciones de producto ("Talle", "Color", o los del rubro).
+
+function renderVariantLabels() {
+
+    document.querySelectorAll('[data-variante="talle"]').forEach(element => {
+        element.textContent = SIZE_LABEL;
+    });
+
+    document.querySelectorAll('[data-variante="color"]').forEach(element => {
+        element.textContent = COLOR_LABEL;
+    });
+
+}
+
+
+// Los descuentos que valen son los del panel: tienda-config.js los carga
+// y avisa con este evento.
+
+document.addEventListener("tienda:descuentos", event => {
+
+    PAYMENT_CONFIG.discounts["mercado-pago"] = event.detail["mercado-pago"];
+    PAYMENT_CONFIG.discounts.link = event.detail["mercado-pago"];
+    PAYMENT_CONFIG.discounts.transferencia = event.detail.transferencia;
+
+    showPrepaidPrices();
+    updateCartSummary();
+    renderPaymentInfo();
+
+});
+
+
+// ==========================================
+// 24. INICIALIZAR
+// ==========================================
+
+renderDeliveryOptions();
+renderVariantLabels();
 syncCartWithPage();
 renderCart();
 showPrepaidPrices();

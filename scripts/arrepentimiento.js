@@ -13,8 +13,8 @@ regretForm.addEventListener("submit", event => {
     const order = document.getElementById("regret-order").value.trim();
 
     const message =
-        `¡Hola Movea! Quiero arrepentirme de mi compra.\n\nNombre: ${name}\nTeléfono: ${phone}\nPedido: ${order}`;
+        `${window.TIENDA.saludo()} Quiero arrepentirme de mi compra.\n\nNombre: ${name}\nTeléfono: ${phone}\nPedido: ${order}`;
 
-    location.href = window.MOVEA_TIENDA.whatsappUrl(message);
+    location.href = window.TIENDA.whatsappUrl(message);
 
 });

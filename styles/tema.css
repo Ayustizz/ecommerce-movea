@@ -1,0 +1,50 @@
+/* =====================================
+   TEMA DE LA TIENDA
+   Colores y tipografías de la marca. Para otro cliente
+   se cambia solo este archivo: el resto de los estilos usa
+   estas variables.
+===================================== */
+
+/* Tipografías (Google Fonts). Si se cambian, actualizar también --font-* */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100..900;1,100..900&family=Rubik:ital,wght@0,500;1,500&display=swap');
+
+:root {
+    color-scheme: light;
+
+    --font-titulos: 'Rubik', sans-serif;
+    --font-texto: 'Poppins', sans-serif;
+
+    /* Color principal: textos fuertes, botones, cabecera */
+    --tienda-ink: #311c1c;
+    --tienda-ink-rgb: 49, 28, 28;
+    --tienda-ink-soft: #563535;
+    --tienda-texto: #1f1b1b;
+    --tienda-texto-2: #514745;
+
+    /* Acento: detalles, enlaces, íconos */
+    --tienda-acento: #805b50;
+    --tienda-acento-rgb: 128, 91, 80;
+    --tienda-acento-fuerte: #704747;
+    --tienda-acento-fuerte-rgb: 112, 71, 71;
+    --tienda-acento-medio: #c9a99d;
+    --tienda-acento-claro: #e8c6b8;
+    --tienda-acento-claro-rgb: 232, 198, 184;
+
+    /* Fondos */
+    --tienda-paper: #fbf8f6;
+    --tienda-surface: #ffffff;
+    --tienda-suave: #f2e4de;
+    --tienda-suave-2: #f5eeea;
+    --tienda-suave-3: #f8f2ef;
+
+    /* Cabecera y pie (degradado) */
+    --tienda-oscuro-1: #241515;
+    --tienda-oscuro-2: #3d2525;
+
+    /* Textos secundarios y bordes */
+    --tienda-muted: #6f6260;
+    --tienda-border: #eadfdb;
+    --tienda-border-fuerte: #d9c8c1;
+
+    --tienda-shadow: 0 12px 32px rgba(var(--tienda-ink-rgb), 0.09);
+}

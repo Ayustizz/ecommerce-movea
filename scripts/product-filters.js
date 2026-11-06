@@ -96,7 +96,7 @@ document.querySelectorAll("[data-product-list]").forEach((list) => {
 
     // Reemplaza las opciones escritas en el HTML por las del panel
 
-    document.addEventListener("movea:categorias", (event) => {
+    document.addEventListener("tienda:categorias", (event) => {
         const categories = event.detail;
         const selected = categorySelect.value;
         const options = [categorySelect.options[0]];
@@ -168,12 +168,12 @@ document.querySelectorAll("[data-product-list]").forEach((list) => {
 
     if (sortSelect) {
         sortSelect.addEventListener("change", sortProducts);
-        document.addEventListener("movea:catalogo", sortProducts);
+        document.addEventListener("tienda:catalogo", sortProducts);
     }
 
     searchInput.addEventListener("input", filterProducts);
     categorySelect.addEventListener("change", filterProducts);
-    document.addEventListener("movea:categorias", filterProducts);
-    document.addEventListener("movea:catalogo", filterProducts);
+    document.addEventListener("tienda:categorias", filterProducts);
+    document.addEventListener("tienda:catalogo", filterProducts);
     filterProducts();
 });

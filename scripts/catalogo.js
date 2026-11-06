@@ -5,7 +5,7 @@
 
 (() => {
 
-    const config = window.MOVEA_SUPABASE;
+    const config = window.TIENDA_SUPABASE;
     const list = document.querySelector("[data-catalog]");
 
     if (!list) return;
@@ -149,8 +149,8 @@
             const notify = document.createElement("a");
 
             notify.classList.add("product-card__notify");
-            notify.href = window.MOVEA_TIENDA.whatsappUrl(
-                `¡Hola Movea! Quiero que me avisen cuando vuelva a haber stock de "${product.name}".`
+            notify.href = window.TIENDA.whatsappUrl(
+                `${window.TIENDA.saludo()} Quiero que me avisen cuando vuelva a haber stock de "${product.name}".`
             );
             notify.target = "_blank";
             notify.rel = "noopener noreferrer";
@@ -201,7 +201,7 @@
             const categories = await response.json();
 
             document.dispatchEvent(
-                new CustomEvent("movea:categorias", { detail: categories })
+                new CustomEvent("tienda:categorias", { detail: categories })
             );
 
             return categories;
@@ -255,7 +255,7 @@
             list.removeAttribute("aria-busy");
 
             document.dispatchEvent(
-                new CustomEvent("movea:catalogo", { detail: products })
+                new CustomEvent("tienda:catalogo", { detail: products })
             );
 
             return products;

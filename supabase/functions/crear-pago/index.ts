@@ -6,6 +6,9 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 const MP_ACCESS_TOKEN = Deno.env.get("MP_ACCESS_TOKEN");
 
+// Nombre del negocio: título del pago y lo que figura en el resumen de la tarjeta.
+const STORE_NAME = Deno.env.get("TIENDA_NOMBRE") ?? "Tienda";
+
 const ALLOWED_ORIGINS = [new URL(SITE_URL).origin, "http://localhost:5500"];
 
 const dbHeaders = {
@@ -97,7 +100,7 @@ Deno.serve(async request => {
             },
             body: JSON.stringify({
                 items: [{
-                    title: `Pedido ${code} - Movea`,
+                    title: `Pedido ${code} - ${STORE_NAME}`,
                     quantity: 1,
                     unit_price: order.total,
                     currency_id: "ARS"
@@ -110,7 +113,7 @@ Deno.serve(async request => {
                 },
                 auto_return: "approved",
                 binary_mode: true,
-                statement_descriptor: "MOVEA"
+                statement_descriptor: STORE_NAME.toUpperCase().slice(0, 13)
             })
         }
     );

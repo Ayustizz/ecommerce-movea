@@ -4,7 +4,7 @@
 // Nunca pongas acá la clave "service_role" o "secret".
 // Mientras estén vacíos, la tienda usa los productos del HTML.
 
-window.MOVEA_SUPABASE = {
+window.TIENDA_SUPABASE = {
     url: "https://bynttfvlwyplfovklzxa.supabase.co",
     anonKey: "sb_publishable_aOYae4AFMNPPF1uk_D6bGA_XyRRZMOv",
 

@@ -5,8 +5,8 @@
 
 (() => {
 
-    const config = window.MOVEA_SUPABASE;
-    const gallery = document.getElementById("moveaGallery");
+    const config = window.TIENDA_SUPABASE;
+    const gallery = document.getElementById("galeriaTienda");
 
     if (!gallery || !config || !config.url || !config.anonKey) return;
 
@@ -39,7 +39,7 @@
         const indicator = document.createElement("button");
 
         indicator.type = "button";
-        indicator.dataset.bsTarget = "#moveaGallery";
+        indicator.dataset.bsTarget = "#galeriaTienda";
         indicator.dataset.bsSlideTo = index;
         indicator.setAttribute("aria-label", `Imagen ${index + 1}`);
 

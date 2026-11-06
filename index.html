@@ -152,15 +152,15 @@
         <section class="gallery-section" aria-label="Galería Movea">
 
             <div
-                id="moveaGallery"
-                class="carousel slide movea-carousel movea-carousel--hero"
+                id="galeriaTienda"
+                class="carousel slide tienda-carousel tienda-carousel--hero"
                 data-bs-ride="carousel">
 
                 <div class="carousel-indicators">
 
                     <button
                         type="button"
-                        data-bs-target="#moveaGallery"
+                        data-bs-target="#galeriaTienda"
                         data-bs-slide-to="0"
                         class="active"
                         aria-current="true"
@@ -169,14 +169,14 @@
 
                     <button
                         type="button"
-                        data-bs-target="#moveaGallery"
+                        data-bs-target="#galeriaTienda"
                         data-bs-slide-to="1"
                         aria-label="Imagen 2">
                     </button>
 
                     <button
                         type="button"
-                        data-bs-target="#moveaGallery"
+                        data-bs-target="#galeriaTienda"
                         data-bs-slide-to="2"
                         aria-label="Imagen 3">
                     </button>
@@ -213,7 +213,7 @@
                 <button
                     class="carousel-control-prev"
                     type="button"
-                    data-bs-target="#moveaGallery"
+                    data-bs-target="#galeriaTienda"
                     data-bs-slide="prev"
                     aria-label="Imagen anterior">
 
@@ -224,7 +224,7 @@
                 <button
                     class="carousel-control-next"
                     type="button"
-                    data-bs-target="#moveaGallery"
+                    data-bs-target="#galeriaTienda"
                     data-bs-slide="next"
                     aria-label="Imagen siguiente">
 
@@ -243,7 +243,7 @@
 
             <li>
                 <i class="fa-solid fa-tag" aria-hidden="true"></i>
-                <span><strong>10% off</strong> con transferencia o Mercado Pago</span>
+                <span><strong><span data-descuento="mejor-texto">10</span>% off</strong> con transferencia o Mercado Pago</span>
             </li>
 
             <li>
@@ -545,49 +545,11 @@
 
 
         <!-- Entrega -->
-        <fieldset class="checkout-payment">
+        <fieldset class="checkout-payment" data-entregas>
 
             <legend>¿Cómo querés recibirlo?</legend>
 
-            <label class="payment-option">
-
-                <input
-                    type="radio"
-                    name="deliveryMethod"
-                    value="encuentro"
-                    required>
-
-                <span class="payment-option-content">
-
-                    <strong>Punto de encuentro</strong>
-
-                    <span class="payment-no-discount">
-                        Coordinamos el lugar con vos
-                    </span>
-
-                </span>
-
-            </label>
-
-
-            <label class="payment-option">
-
-                <input
-                    type="radio"
-                    name="deliveryMethod"
-                    value="uber">
-
-                <span class="payment-option-content">
-
-                    <strong>Envío por Uber</strong>
-
-                    <span class="payment-no-discount">
-                        Coordinamos el envío y su costo con vos
-                    </span>
-
-                </span>
-
-            </label>
+            <!-- Las opciones salen de "entregas" en scripts/tienda-config.js -->
 
         </fieldset>
 
@@ -646,7 +608,7 @@
                     <strong>Pagar ahora con Mercado Pago</strong>
 
                     <span class="payment-discount">
-                        Tarjeta, débito o dinero en cuenta · 10% de descuento
+                        Tarjeta, débito o dinero en cuenta · <span data-descuento="mercado-pago">10</span>% de descuento
                     </span>
 
                 </span>
@@ -666,7 +628,7 @@
                     <strong>Link de pago de Mercado Pago</strong>
 
                     <span class="payment-discount">
-                        Con el monto ya cargado, para pagar cuando quieras · 10% de descuento
+                        Con el monto ya cargado, para pagar cuando quieras · <span data-descuento="mercado-pago">10</span>% de descuento
                     </span>
 
                 </span>
@@ -686,7 +648,7 @@
                     <strong>Transferencia con alias</strong>
 
                     <span class="payment-discount">
-                        10% de descuento pagando por transferencia
+                        <span data-descuento="transferencia">10</span>% de descuento pagando por transferencia
                     </span>
 
                 </span>
@@ -967,7 +929,7 @@
             <p id="product-dialog-description" class="product-dialog__description"></p>
 
             <fieldset id="product-dialog-sizes" class="product-options">
-                <legend>Talle</legend>
+                <legend data-variante="talle">Talle</legend>
                 <div class="product-options__list"></div>
             </fieldset>
 
@@ -977,7 +939,7 @@
             </details>
 
             <fieldset id="product-dialog-colors" class="product-options">
-                <legend>Color</legend>
+                <legend data-variante="color">Color</legend>
                 <div class="product-options__list"></div>
             </fieldset>
 

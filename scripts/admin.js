@@ -56,10 +56,18 @@ const EXPENSE_CATEGORY_NAMES = {
     otros: "Otros"
 };
 
-const DELIVERY_NAMES = {
-    encuentro: "Punto de encuentro",
-    uber: "Envío por Uber"
-};
+// Datos del negocio: scripts/tienda-config.js
+
+const STORE_CONFIG = window.TIENDA;
+
+const DELIVERY_NAMES = Object.fromEntries(
+    STORE_CONFIG.entregas.map(option => [option.id, option.nombre])
+);
+
+const SIZE_OPTIONS = STORE_CONFIG.variantes.talle;
+
+document.title = `${STORE_CONFIG.nombre} | Administración`;
+const COLOR_OPTIONS = STORE_CONFIG.variantes.color;
 
 const MP_STATUS_NAMES = {
     iniciado: "Esperando pago en Mercado Pago.",
@@ -92,6 +100,15 @@ const tabProducts = document.getElementById("tab-products");
 const tabOrders = document.getElementById("tab-orders");
 const tabAccounts = document.getElementById("tab-accounts");
 const tabBanners = document.getElementById("tab-banners");
+const tabSettings = document.getElementById("tab-settings");
+const viewSettings = document.getElementById("view-settings");
+
+const settingsForm = document.getElementById("settings-form");
+const settingsDiscountMp = document.getElementById("settings-discount-mp");
+const settingsDiscountTransfer = document.getElementById("settings-discount-transfer");
+const settingsError = document.getElementById("settings-error");
+const settingsSaved = document.getElementById("settings-saved");
+const settingsSave = document.getElementById("settings-save");
 const tabCategories = document.getElementById("tab-categories");
 const viewCategories = document.getElementById("view-categories");
 const viewBanners = document.getElementById("view-banners");
@@ -113,7 +130,10 @@ const productTrackStock = document.getElementById("product-track-stock");
 const productStockGrid = document.getElementById("product-stock-grid");
 const productOffer = document.getElementById("product-offer");
 const productColors = document.getElementById("product-colors");
-const productSizes = document.querySelectorAll('input[name="productSize"]');
+const productSizesField = document.getElementById("product-sizes-field");
+const productSizesLegend = document.getElementById("product-sizes-legend");
+const productSizesList = document.getElementById("product-sizes");
+const productColorsLabel = document.getElementById("product-colors-label");
 const productImage = document.getElementById("product-image");
 const productImagePreview = document.getElementById("product-image-preview");
 const productActive = document.getElementById("product-active");
@@ -178,7 +198,7 @@ const expensesList = document.getElementById("expenses-list");
 // 3. ESTADO
 // ==========================================
 
-const config = window.MOVEA_SUPABASE;
+const config = window.TIENDA_SUPABASE;
 
 const client = config && config.url && config.anonKey
     ? window.supabase.createClient(config.url, config.anonKey)
@@ -290,7 +310,7 @@ function getPhoneChatUrl(phone) {
 function getVariantText(item) {
 
     const variant = [
-        item.size && `Talle ${item.size}`,
+        item.size && `${SIZE_OPTIONS.nombre} ${item.size}`,
         item.color
     ].filter(Boolean).join(", ");
 
@@ -431,7 +451,8 @@ function selectTab(tab) {
         [tabCategories, viewCategories],
         [tabOrders, viewOrders],
         [tabAccounts, viewAccounts],
-        [tabBanners, viewBanners]
+        [tabBanners, viewBanners],
+        [tabSettings, viewSettings]
     ].forEach(([item, view]) => {
 
         item.classList.toggle("active", item === tab);
@@ -453,6 +474,10 @@ function selectTab(tab) {
         renderCategories();
     }
 
+    if (tab === tabSettings) {
+        loadSettings();
+    }
+
 }
 
 tabProducts.addEventListener("click", () => selectTab(tabProducts));
@@ -460,6 +485,7 @@ tabCategories.addEventListener("click", () => selectTab(tabCategories));
 tabOrders.addEventListener("click", () => selectTab(tabOrders));
 tabAccounts.addEventListener("click", () => selectTab(tabAccounts));
 tabBanners.addEventListener("click", () => selectTab(tabBanners));
+tabSettings.addEventListener("click", () => selectTab(tabSettings));
 
 
 // ==========================================
@@ -602,8 +628,8 @@ function createProductRow(product) {
     }
 
     const options = [
-        product.sizes.length > 0 && `Talles: ${product.sizes.join(", ")}`,
-        product.colors.length > 0 && `Colores: ${product.colors.join(", ")}`
+        product.sizes.length > 0 && `${SIZE_OPTIONS.plural}: ${product.sizes.join(", ")}`,
+        product.colors.length > 0 && `${COLOR_OPTIONS.plural}: ${product.colors.join(", ")}`
     ].filter(Boolean).join(" · ");
 
     info.append(
@@ -705,7 +731,7 @@ productsCategoryFilter.addEventListener("change", renderProducts);
 
 function getSelectedSizes() {
 
-    return Array.from(productSizes)
+    return Array.from(getSizeInputs())
         .filter(input => input.checked)
         .map(input => input.value);
 
@@ -819,9 +845,42 @@ async function saveProductStock(productId) {
 productTrackStock.addEventListener("change", renderStockGrid);
 productColors.addEventListener("input", renderStockGrid);
 
-productSizes.forEach(input => {
-    input.addEventListener("change", renderStockGrid);
-});
+// Botones de talle (o la opción del rubro), desde tienda-config.js.
+
+function getSizeInputs() {
+
+    return productSizesList.querySelectorAll('input[name="productSize"]');
+
+}
+
+function renderSizeOptions() {
+
+    productSizesField.hidden = SIZE_OPTIONS.opciones.length === 0;
+    productSizesLegend.textContent = `${SIZE_OPTIONS.plural} disponibles`;
+
+    productSizesList.replaceChildren(...SIZE_OPTIONS.opciones.map(option => {
+
+        const label = document.createElement("label");
+        const input = document.createElement("input");
+
+        input.type = "checkbox";
+        input.name = "productSize";
+        input.value = option;
+
+        input.addEventListener("change", renderStockGrid);
+
+        label.append(input, ` ${option}`);
+
+        return label;
+
+    }));
+
+    productColorsLabel.textContent = `${COLOR_OPTIONS.plural} disponibles`;
+    productColors.placeholder = `Ej.: ${COLOR_OPTIONS.ejemplo}`;
+
+}
+
+renderSizeOptions();
 
 function openProductForm(product = null) {
 
@@ -847,7 +906,7 @@ function openProductForm(product = null) {
         productComparePrice.value = product.compare_price ?? "";
         productTrackStock.checked = product.track_stock;
 
-        productSizes.forEach(input => {
+        getSizeInputs().forEach(input => {
             input.checked = product.sizes.includes(input.value);
         });
 
@@ -1493,7 +1552,7 @@ function downloadCsv(fileName, rows) {
 
 ordersExport.addEventListener("click", () => {
 
-    downloadCsv("ventas-movea.csv", [
+    downloadCsv(`ventas-${STORE_CONFIG.id}.csv`, [
         ["Pedido", "Fecha", "Cliente", "Teléfono", "Productos", "Entrega", "Zona", "Pago", "Estado del pago", "Entregado", "Total"],
         ...orders.map(order => [
             order.code,
@@ -1516,7 +1575,7 @@ ordersExport.addEventListener("click", () => {
 
 expensesExport.addEventListener("click", () => {
 
-    downloadCsv(`gastos-movea-${accountsMonth.value}.csv`, [
+    downloadCsv(`gastos-${STORE_CONFIG.id}-${accountsMonth.value}.csv`, [
         ["Fecha", "Concepto", "Categoría", "Importe"],
         ...monthExpenses.map(expense => [
             expense.spent_on,
@@ -2321,7 +2380,74 @@ categoryForm.addEventListener("submit", async event => {
 
 
 // ==========================================
-// 14. INICIALIZAR
+// 14. AJUSTES
+// ==========================================
+
+// Una sola fila (id 1) con los descuentos. La función create_order
+// de la base los usa para calcular el total de cada pedido.
+
+async function loadSettings() {
+
+    showError(settingsError, "");
+    settingsSaved.hidden = true;
+
+    const { data, error } = await client
+        .from("ajustes")
+        .select("descuento_mercado_pago, descuento_transferencia")
+        .eq("id", 1)
+        .maybeSingle();
+
+    if (error || !data) {
+
+        console.error("Error al cargar los ajustes:", error);
+
+        showError(settingsError, "No se pudieron cargar los ajustes. ¿Se ejecutó supabase/migracion-ajustes.sql?");
+
+        return;
+
+    }
+
+    settingsDiscountMp.value = data.descuento_mercado_pago;
+    settingsDiscountTransfer.value = data.descuento_transferencia;
+
+}
+
+settingsForm.addEventListener("submit", async event => {
+
+    event.preventDefault();
+
+    showError(settingsError, "");
+    settingsSaved.hidden = true;
+
+    settingsSave.disabled = true;
+
+    const { error } = await client
+        .from("ajustes")
+        .update({
+            descuento_mercado_pago: Number(settingsDiscountMp.value),
+            descuento_transferencia: Number(settingsDiscountTransfer.value)
+        })
+        .eq("id", 1);
+
+    settingsSave.disabled = false;
+
+    if (error) {
+
+        console.error("Error al guardar los ajustes:", error);
+
+        showError(settingsError, "No se pudieron guardar los descuentos. Probá de nuevo.");
+
+        return;
+
+    }
+
+    settingsSaved.hidden = false;
+
+});
+
+
+// ==========================================
+// 15. INICIALIZAR
 // ==========================================
 
 async function init() {

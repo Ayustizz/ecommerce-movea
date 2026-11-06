@@ -7,7 +7,7 @@
 // El número de WhatsApp está en scripts/tienda-config.js.
 
 // Misma clave que STORAGE_KEY en scripts/carrito.js
-const STORAGE_KEY = "movea-cart-v2";
+const STORAGE_KEY = `${window.TIENDA.id}-cart-v2`;
 
 const parameters = new URLSearchParams(location.search);
 
@@ -36,9 +36,9 @@ if (isApproved) {
     retry.hidden = true;
 
     const message =
-        `¡Hola Movea! Pagué mi pedido${orderCode ? ` ${orderCode}` : ""} por Mercado Pago. Quiero coordinar la entrega.`;
+        `${window.TIENDA.saludo()} Pagué mi pedido${orderCode ? ` ${orderCode}` : ""} por Mercado Pago. Quiero coordinar la entrega.`;
 
-    whatsapp.href = window.MOVEA_TIENDA.whatsappUrl(message);
+    whatsapp.href = window.TIENDA.whatsappUrl(message);
 
     try {
 
