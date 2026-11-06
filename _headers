@@ -1,0 +1,23 @@
+# Cabeceras de seguridad que Netlify agrega a cada página.
+# La política de contenido (CSP) sigue en el <head> de cada página.
+
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+
+# El panel y la vuelta de Mercado Pago no aparecen en Google.
+# Netlify las sirve como /pages/admin y /pages/pago.
+/pages/admin
+  X-Robots-Tag: noindex, nofollow
+
+/pages/pago
+  X-Robots-Tag: noindex, nofollow
+
+/Pages/admin.html
+  X-Robots-Tag: noindex, nofollow
+
+/Pages/pago.html
+  X-Robots-Tag: noindex, nofollow

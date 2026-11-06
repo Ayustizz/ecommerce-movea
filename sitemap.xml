@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mapa del sitio para Google. Si se agrega una página pública, sumarla acá. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+        <loc>https://moveafit.netlify.app/</loc>
+        <lastmod>2026-11-06</lastmod>
+    </url>
+    <url>
+        <loc>https://moveafit.netlify.app/pages/productos</loc>
+        <lastmod>2026-11-06</lastmod>
+    </url>
+    <url>
+        <loc>https://moveafit.netlify.app/pages/ofertas</loc>
+        <lastmod>2026-11-06</lastmod>
+    </url>
+    <url>
+        <loc>https://moveafit.netlify.app/pages/nosotros</loc>
+        <lastmod>2026-11-06</lastmod>
+    </url>
+    <url>
+        <loc>https://moveafit.netlify.app/pages/contacto</loc>
+        <lastmod>2026-11-06</lastmod>
+    </url>
+    <url>
+        <loc>https://moveafit.netlify.app/pages/cambios</loc>
+        <lastmod>2026-11-06</lastmod>
+    </url>
+    <url>
+        <loc>https://moveafit.netlify.app/pages/privacidad</loc>
+        <lastmod>2026-11-06</lastmod>
+    </url>
+    <url>
+        <loc>https://moveafit.netlify.app/pages/arrepentimiento</loc>
+        <lastmod>2026-11-06</lastmod>
+    </url>
+</urlset>

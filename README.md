@@ -23,7 +23,9 @@ Si la base ya existía, ejecutar una sola vez y en orden las migraciones que fal
 
 Seguridad: cada página tiene una política de contenido (Content-Security-Policy) que nombra el proyecto de Supabase. Si cambia el proyecto, hay que actualizar esa dirección en las diez páginas. Si se actualiza Bootstrap, Font Awesome o Supabase, hay que recalcular los valores integrity.
 
-Stock: el pedido descuenta las unidades al crearse y cancelar lo devuelve. Con dominio propio, cambiar el <base> de 404.html y las direcciones og: de index.html.
+Stock: el pedido descuenta las unidades al crearse y cancelar lo devuelve.
+
+Publicación: la tienda está en Netlify, en https://moveafit.netlify.app. El archivo _headers agrega las cabeceras de seguridad. Para Google están robots.txt, sitemap.xml, la dirección oficial (canonical) y la vista previa al compartir (og:) en cada página pública, y la ficha de la tienda en index.html. Si cambia la dirección (por ejemplo, con dominio propio), reemplazar https://moveafit.netlify.app en todo el proyecto y actualizar el secreto SITE_URL de Supabase.
 
 Datos de la tienda: el número de WhatsApp, cómo se muestra, el horario de atención y la guía de talles se cambian en un solo lugar, scripts/tienda-config.js. Todas las páginas toman el número de ahí.
 
@@ -34,7 +36,7 @@ Activar Mercado Pago (una sola vez). El token de Mercado Pago nunca va en el có
 1. En mercadopago.com.ar/developers, entrar a "Tus integraciones" y crear una aplicación de tipo "Pagos online" con Checkout Pro.
 2. En la aplicación, "Credenciales de producción": copiar el Access Token (empieza con APP_USR-).
 3. En Supabase, Edge Functions: crear la función crear-pago pegando el código de supabase/functions/crear-pago/index.ts, y la función webhook-mercadopago con supabase/functions/webhook-mercadopago/index.ts. En las dos, desactivar "Verify JWT".
-4. En Supabase, Edge Functions > Secrets: agregar MP_ACCESS_TOKEN con el token del paso 2, y SITE_URL con la dirección pública de la tienda (por ejemplo https://ayustizz.github.io/ecommerce-movea, sin barra al final).
+4. En Supabase, Edge Functions > Secrets: agregar MP_ACCESS_TOKEN con el token del paso 2, y SITE_URL con la dirección pública de la tienda (https://moveafit.netlify.app, sin barra al final).
 5. En la aplicación de Mercado Pago, "Webhooks": poner la URL https://ID-DEL-PROYECTO.supabase.co/functions/v1/webhook-mercadopago, marcar el evento "Pagos" y guardar. Copiar la "clave secreta" que aparece y agregarla en Supabase como secreto MP_WEBHOOK_SECRET.
 6. En scripts/supabase-config.js, cambiar mercadoPago: false por mercadoPago: true y publicar la tienda.
 7. Probar con una compra chica real y verificar que en el panel, Ventas, el pedido pase solo a "Pagado".

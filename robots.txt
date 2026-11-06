@@ -1,0 +1,7 @@
+# El panel y la vuelta de Mercado Pago se excluyen con "noindex"
+# en su propia página: si se bloquearan acá, Google no podría leerlo.
+
+User-agent: *
+Allow: /
+
+Sitemap: https://moveafit.netlify.app/sitemap.xml

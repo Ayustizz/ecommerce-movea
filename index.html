@@ -7,16 +7,22 @@
     <meta name="referrer" content="strict-origin-when-cross-origin">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta property="og:type" content="website">
-    <meta property="og:site_name" content="Movea">
-    <meta property="og:title" content="Movea | Ropa deportiva">
-    <meta property="og:description" content="Ropa deportiva para mujeres: shorts, calzas, tops y corpiños deportivos.">
-    <meta property="og:image" content="https://ayustizz.github.io/ecommerce-movea/img/banners/Banner_inicio.jpg">
-    <meta property="og:url" content="https://ayustizz.github.io/ecommerce-movea/">
-
     <meta name="theme-color" content="#311c1c">
 
     <meta name="description" content="Ropa deportiva para mujeres: shorts, calzas, tops y corpiños deportivos. Comprá online y coordiná tu pedido por WhatsApp.">
+
+    <link rel="canonical" href="https://moveafit.netlify.app/">
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Movea">
+    <meta property="og:locale" content="es_AR">
+    <meta property="og:title" content="Movea | Ropa deportiva">
+    <meta property="og:description" content="Ropa deportiva para mujeres: shorts, calzas, tops y corpiños deportivos. Comprá online y coordiná tu pedido por WhatsApp.">
+    <meta property="og:url" content="https://moveafit.netlify.app/">
+    <meta property="og:image" content="https://moveafit.netlify.app/img/banners/Banner_inicio.jpg">
+    <meta property="og:image:width" content="1600">
+    <meta property="og:image:height" content="700">
+    <meta name="twitter:card" content="summary_large_image">
 
     <link rel="icon" href="./img/favicon.svg" type="image/svg+xml">
 
@@ -30,6 +36,44 @@
 
     <!-- Iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha384-t1nt8BQoYMLFN5p42tRAtuAAFQaCQODekUVeKKZrEnEyp4H2R0RHFz0KWpmj7i8g" crossorigin="anonymous">
+
+    <!-- Ficha de la tienda para Google. Son datos, no código: la CSP no los bloquea.
+         Si cambia el WhatsApp, actualizarlo también acá. -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "ClothingStore",
+                "@id": "https://moveafit.netlify.app/#tienda",
+                "name": "Movea",
+                "description": "Ropa deportiva para mujeres: shorts, calzas, tops y corpiños deportivos.",
+                "url": "https://moveafit.netlify.app/",
+                "logo": "https://moveafit.netlify.app/img/favicon.svg",
+                "image": "https://moveafit.netlify.app/img/banners/Banner_inicio.jpg",
+                "telephone": "+54 9 11 5122-7752",
+                "priceRange": "$$",
+                "currenciesAccepted": "ARS",
+                "paymentAccepted": "Mercado Pago, transferencia, efectivo",
+                "address": {
+                    "@type": "PostalAddress",
+                    "addressLocality": "Tortuguitas",
+                    "addressRegion": "Buenos Aires",
+                    "addressCountry": "AR"
+                },
+                "sameAs": ["https://www.instagram.com/moveafitt/"]
+            },
+            {
+                "@type": "WebSite",
+                "@id": "https://moveafit.netlify.app/#sitio",
+                "name": "Movea",
+                "url": "https://moveafit.netlify.app/",
+                "inLanguage": "es-AR",
+                "publisher": { "@id": "https://moveafit.netlify.app/#tienda" }
+            }
+        ]
+    }
+    </script>
 </head>
 
 <body>
